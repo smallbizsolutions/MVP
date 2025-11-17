@@ -261,45 +261,49 @@ export default function App() {
       }
       
       try {
-        let content;
-
         if (fileExt === '.pdf') {
-          // Handle PDF files
-          try {
-            const pdfParse = (await import('pdf-parse')).default;
-            const arrayBuffer = await file.arrayBuffer();
-            const pdfData = await pdfParse(Buffer.from(arrayBuffer));
-            content = pdfData.text;
-          } catch (pdfError) {
-            console.error('Error parsing PDF:', pdfError);
-            alert(`Failed to parse PDF: ${file.name}. Make sure it's a valid PDF file.`);
-            continue;
-          }
-        } else {
-          // Handle text files (.txt, .md)
-          content = await file.text();
-        }
+          // Handle PDF files via API route (server-side)
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('fileName', file.name);
 
-        // Truncate if too large (keep first 100k chars)
-        const truncatedContent = content.length > 100000 
-          ? content.substring(0, 100000) + '\n\n[Content truncated...]'
-          : content;
-        
-        const { data, error } = await supabase
-          .from('documents')
-          .insert({
-            business_id: profile.business_id,
-            name: file.name,
-            content: truncatedContent,
-            uploaded_by: user.id
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        
-        if (data) {
-          setDocuments([data, ...documents]);
+          const response = await fetch('/api/upload-pdf', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to upload PDF');
+          }
+
+          const { document } = await response.json();
+          setDocuments([document, ...documents]);
+        } else {
+          // Handle text files (.txt, .md) - client-side
+          const content = await file.text();
+
+          // Truncate if too large (keep first 100k chars)
+          const truncatedContent = content.length > 100000 
+            ? content.substring(0, 100000) + '\n\n[Content truncated...]'
+            : content;
+          
+          const { data, error } = await supabase
+            .from('documents')
+            .insert({
+              business_id: profile.business_id,
+              name: file.name,
+              content: truncatedContent,
+              uploaded_by: user.id
+            })
+            .select()
+            .single();
+          
+          if (error) throw error;
+          
+          if (data) {
+            setDocuments([data, ...documents]);
+          }
         }
         
         setUploadProgress({ current: i + 1, total: files.length });
