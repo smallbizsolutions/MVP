@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request) {
+  const apiKey = request.headers.get('x-api-key');
+  
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: { message: 'x-api-key header is required' } },
+      { status: 401 }
+    );
+  }
+
   const { messages, documents } = await request.json();
 
   const context = documents.map(doc => 
@@ -20,7 +29,6 @@ CRITICAL RULES:
 Company Documents:
 ${context || 'No documents uploaded yet.'}`;
 
-  // Convert messages to Anthropic format
   const anthropicMessages = messages.map(msg => ({
     role: msg.role === 'assistant' ? 'assistant' : 'user',
     content: msg.content
@@ -48,7 +56,6 @@ ${context || 'No documents uploaded yet.'}`;
       throw new Error(data.error.message);
     }
 
-    // Convert back to OpenAI-style format for frontend compatibility
     return NextResponse.json({
       choices: [{
         message: {
