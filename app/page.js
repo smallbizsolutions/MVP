@@ -114,7 +114,8 @@ export default function App() {
     <div style={{ 
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      minHeight: '100vh',
+      minHeight: '100dvh', // Dynamic viewport height for mobile
       background: '#0f1419'
     }}>
       {/* Header */}
