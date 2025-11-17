@@ -7,29 +7,45 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('login'); // 'login', 'signup', 'reset'
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+    setMessage('');
 
     try {
-      if (mode === 'login') {
+      if (mode === 'reset') {
+        // Password reset
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        });
+        
+        if (error) throw error;
+        
+        setMessage('Password reset email sent! Check your inbox.');
+        setEmail('');
+      } else if (mode === 'login') {
+        // Login
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
       } else {
+        // Signup
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        alert('Check your email for the confirmation link!');
+        setMessage('Check your email to confirm your account!');
       }
     } catch (error) {
-      alert(error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -41,7 +57,8 @@ export default function Auth() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#0f1419'
+      background: '#0f1419',
+      padding: '16px'
     }}>
       <div style={{
         width: '100%',
@@ -57,10 +74,38 @@ export default function Auth() {
           marginBottom: '24px',
           color: '#f7fafc',
           textAlign: 'center',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
-          Employee Assistant
+          {mode === 'reset' ? 'Reset Password' : 'Employee Assistant'}
         </h2>
+
+        {message && (
+          <div style={{
+            padding: '12px',
+            marginBottom: '16px',
+            background: '#2f855a',
+            color: '#f0fff4',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            {message}
+          </div>
+        )}
+
+        {error && (
+          <div style={{
+            padding: '12px',
+            marginBottom: '16px',
+            background: '#c53030',
+            color: '#fff5f5',
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleAuth}>
           <div style={{ marginBottom: '16px' }}>
@@ -70,7 +115,7 @@ export default function Auth() {
               fontWeight: '500',
               marginBottom: '8px',
               color: '#e2e8f0',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}>
               Email
             </label>
@@ -88,40 +133,51 @@ export default function Auth() {
                 background: '#0f1419',
                 color: '#f7fafc',
                 outline: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
             />
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
-              marginBottom: '8px',
-              color: '#e2e8f0',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #2d3748',
-                borderRadius: '6px',
+          {mode !== 'reset' && (
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
                 fontSize: '14px',
-                background: '#0f1419',
-                color: '#f7fafc',
-                outline: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-              }}
-            />
-          </div>
+                fontWeight: '500',
+                marginBottom: '8px',
+                color: '#e2e8f0',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #2d3748',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  background: '#0f1419',
+                  color: '#f7fafc',
+                  outline: 'none',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                }}
+              />
+              <p style={{
+                fontSize: '12px',
+                color: '#718096',
+                marginTop: '4px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              }}>
+                {mode === 'signup' && 'Minimum 8 characters'}
+              </p>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -137,29 +193,58 @@ export default function Auth() {
               fontSize: '14px',
               fontWeight: '500',
               opacity: loading ? 0.5 : 1,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}
           >
-            {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
+            {loading ? 'Loading...' : 
+             mode === 'reset' ? 'Send Reset Link' :
+             mode === 'login' ? 'Sign In' : 'Sign Up'}
           </button>
         </form>
 
         <div style={{
           marginTop: '16px',
-          textAlign: 'center'
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
         }}>
+          {mode !== 'reset' && (
+            <button
+              onClick={() => {
+                setMode(mode === 'login' ? 'signup' : 'login');
+                setError('');
+                setMessage('');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#a0aec0',
+                fontSize: '14px',
+                cursor: 'pointer',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              }}
+            >
+              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            </button>
+          )}
+          
           <button
-            onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+            onClick={() => {
+              setMode(mode === 'reset' ? 'login' : 'reset');
+              setError('');
+              setMessage('');
+            }}
             style={{
               background: 'none',
               border: 'none',
               color: '#a0aec0',
               fontSize: '14px',
               cursor: 'pointer',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}
           >
-            {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            {mode === 'reset' ? 'Back to sign in' : 'Forgot password?'}
           </button>
         </div>
       </div>
