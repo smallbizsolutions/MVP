@@ -1,15 +1,27 @@
 import { NextResponse } from 'next/server';
-import { stripe, PLANS } from '../../../../lib/stripe';
+import { stripe, isStripeEnabled, PLANS } from '../../../../lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role for admin operations
-);
+// Need service role for admin operations
+const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  : null;
 
 export async function POST(request) {
+  if (!isStripeEnabled() || !supabase) {
+    return NextResponse.json({ error: 'Webhooks not configured' }, { status: 503 });
+  }
+
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('Missing STRIPE_WEBHOOK_SECRET');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+  }
 
   let event;
 
@@ -140,7 +152,7 @@ async function handlePaymentFailed(invoice) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, user_email')
+    .select('id')
     .eq('stripe_customer_id', customerId)
     .single();
 
