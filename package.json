@@ -12,7 +12,9 @@
     "react": "^18",
     "react-dom": "^18",
     "next": "14.2.5",
-    "lucide-react": "^0.263.1"
+    "lucide-react": "^0.263.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/auth-helpers-nextjs": "^0.8.7"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
