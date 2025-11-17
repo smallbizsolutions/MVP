@@ -131,7 +131,8 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: '1px solid #2d3748',
+                border: 'none',
+                outline: mode === 'ask' ? '1px solid #2d3748' : 'none',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
@@ -147,7 +148,8 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: '1px solid #2d3748',
+                border: 'none',
+                outline: mode === 'manage' ? '1px solid #2d3748' : 'none',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
@@ -282,10 +284,10 @@ export default function App() {
                   color: '#718096',
                   marginTop: '80px'
                 }}>
-                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0' }}>
+                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     Ask a question
                   </p>
-                  <p style={{ fontSize: '14px', color: '#718096' }}>
+                  <p style={{ fontSize: '14px', color: '#718096', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     Press the mic or type
                   </p>
                 </div>
