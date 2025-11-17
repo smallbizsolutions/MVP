@@ -112,10 +112,13 @@ export default function App() {
 
   return (
     <div style={{ 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
-      minHeight: '100dvh', // Dynamic viewport height for mobile
       background: '#0f1419'
     }}>
       {/* Header */}
@@ -170,7 +173,8 @@ export default function App() {
       <div style={{ 
         flex: 1,
         display: 'flex',
-        padding: '16px'
+        padding: '16px',
+        overflow: 'hidden'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>
           {mode === 'manage' ? (
@@ -178,7 +182,9 @@ export default function App() {
               background: '#1a2332',
               borderRadius: '8px',
               border: '1px solid #2d3748',
-              padding: '24px'
+              padding: '24px',
+              flex: 1,
+              overflow: 'auto'
             }}>
               <div>
                 <label style={{ 
@@ -272,7 +278,7 @@ export default function App() {
               background: '#1a2332',
               borderRadius: '8px',
               border: '1px solid #2d3748',
-              height: '100%',
+              flex: 1,
               display: 'flex',
               flexDirection: 'column'
             }}>
