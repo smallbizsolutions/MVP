@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { checkUsageLimits, incrementApiCall, logApiUsage } from '../../../lib/usageLimits';
 
 export const maxDuration = 60;
 
-// Validate environment variables on module load
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('CRITICAL: Missing ANTHROPIC_API_KEY environment variable');
 }
@@ -14,8 +14,10 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
 }
 
 export async function POST(request) {
+  const startTime = Date.now();
+  let userId, businessId;
+
   try {
-    // Validate environment variables
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
         { error: 'Server configuration error: Missing API key' },
@@ -36,14 +38,28 @@ export async function POST(request) {
       }
     );
 
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's profile
+    userId = user.id;
+
+    // Check usage limits
+    const limits = await checkUsageLimits(userId);
+    
+    if (!limits.can_use_api) {
+      return NextResponse.json({
+        error: 'API call limit reached',
+        details: {
+          used: limits.api_calls_used,
+          limit: limits.api_calls_limit,
+          message: `You've reached your monthly limit of ${limits.api_calls_limit} API calls. Upgrade to Pro for 1,000 calls/month or Enterprise for unlimited.`
+        }
+      }, { status: 429 });
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('business_id')
@@ -54,11 +70,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Parse request body
+    businessId = profile.business_id;
+
     const body = await request.json();
     const { messages } = body;
     
-    // Validate messages
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid messages format' }, { status: 400 });
     }
@@ -79,7 +95,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Message too long (max 10000 characters)' }, { status: 400 });
     }
 
-    // Get relevant documents (limited to avoid token overflow)
     const { data: documents, error: docsError } = await supabase
       .from('documents')
       .select('name, content')
@@ -89,22 +104,18 @@ export async function POST(request) {
 
     if (docsError) {
       console.error('Error fetching documents:', docsError);
-      // Continue without documents rather than failing
     }
 
-    // Build context from documents
     let context = '';
     if (documents && documents.length > 0) {
       context = 'Here are relevant documents from your knowledge base:\n\n';
       documents.forEach((doc, idx) => {
-        // Truncate each document to avoid token limits
         const truncatedContent = doc.content.substring(0, 2000);
         context += `[Document ${idx + 1}: ${doc.name}]\n${truncatedContent}\n\n`;
       });
       context += 'Based on the above documents, please answer the following question:\n\n';
     }
 
-    // Prepare messages for Claude with context
     const contextualMessages = [
       {
         role: 'user',
@@ -112,7 +123,6 @@ export async function POST(request) {
       },
     ];
 
-    // Call Claude API with retry logic
     let response;
     let retries = 3;
     let lastError;
@@ -134,20 +144,18 @@ export async function POST(request) {
         });
 
         if (response.ok) {
-          break; // Success, exit retry loop
+          break;
         }
 
         const errorData = await response.json();
         lastError = new Error(errorData.error?.message || `API error: ${response.status}`);
         
-        // Don't retry on client errors (4xx)
         if (response.status >= 400 && response.status < 500) {
           throw lastError;
         }
 
         retries--;
         if (retries > 0) {
-          // Exponential backoff: wait 1s, then 2s, then 4s
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, 3 - retries) * 1000));
         }
       } catch (error) {
@@ -156,7 +164,6 @@ export async function POST(request) {
         if (retries === 0) {
           throw error;
         }
-        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, 3 - retries) * 1000));
       }
     }
@@ -173,6 +180,14 @@ export async function POST(request) {
 
     const assistantResponse = data.content[0].text;
 
+    // Increment API call counter
+    await incrementApiCall(userId);
+
+    // Log usage
+    const responseTime = Date.now() - startTime;
+    const tokensUsed = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    await logApiUsage(userId, businessId, '/api/chat', tokensUsed, responseTime, 200);
+
     return NextResponse.json({
       choices: [{
         message: {
@@ -181,12 +196,21 @@ export async function POST(request) {
         },
       }],
       documentsUsed: documents?.length || 0,
+      usage: {
+        remaining: limits.api_calls_limit - (limits.api_calls_used + 1),
+        limit: limits.api_calls_limit
+      }
     });
 
   } catch (error) {
     console.error('Chat error:', error);
     
-    // Return user-friendly error messages
+    // Log failed request
+    if (userId && businessId) {
+      const responseTime = Date.now() - startTime;
+      await logApiUsage(userId, businessId, '/api/chat', 0, responseTime, 500);
+    }
+    
     let errorMessage = 'Failed to process request';
     let statusCode = 500;
 
