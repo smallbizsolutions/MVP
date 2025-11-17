@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
+import { chunkText, generateEmbeddingsBatch, estimateTokens } from '../../../lib/embeddings';
 
 export async function POST(request) {
   try {
