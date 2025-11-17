@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Upload, X, FileText, LogOut, Edit2, Check, MessageSquare, Settings } from 'lucide-react';
+import { Mic, MicOff, Upload, X, FileText, LogOut, Edit2, Check, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Auth from '../components/Auth';
 
@@ -222,13 +222,11 @@ export default function App() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
-      // Validate file size
       if (file.size > MAX_FILE_SIZE) {
         alert(`${file.name} is too large (max 5MB)`);
         continue;
       }
 
-      // Validate file type
       const fileExt = '.' + file.name.split('.').pop().toLowerCase();
       if (!ALLOWED_FILE_TYPES.includes(fileExt)) {
         alert(`${file.name} is not an allowed file type. Allowed: ${ALLOWED_FILE_TYPES.join(', ')}`);
@@ -238,9 +236,7 @@ export default function App() {
       try {
         let content = '';
         
-        // Handle different file types
         if (file.type === 'application/pdf') {
-          // Simple text extraction for PDF
           const arrayBuffer = await file.arrayBuffer();
           const text = new TextDecoder().decode(arrayBuffer);
           content = text;
@@ -248,7 +244,6 @@ export default function App() {
           content = await file.text();
         }
 
-        // Limit content size
         if (content.length > 100000) {
           content = content.substring(0, 100000) + '\n\n[Content truncated...]';
         }
@@ -278,7 +273,7 @@ export default function App() {
     }
 
     setUploadProgress(null);
-    e.target.value = ''; // Reset file input
+    e.target.value = '';
   };
 
   const handleDeleteDocument = async (docId) => {
@@ -360,7 +355,6 @@ export default function App() {
       return;
     }
 
-    // Create conversation if none exists
     let conversationId = currentConversation?.id;
     if (!conversationId) {
       try {
@@ -394,7 +388,6 @@ export default function App() {
     setIsLoading(true);
     setError(null);
 
-    // Save user message to database
     try {
       await supabase
         .from('messages')
@@ -432,7 +425,6 @@ export default function App() {
 
       setMessages([...newMessages, assistantMessage]);
 
-      // Save assistant message to database
       await supabase
         .from('messages')
         .insert({
@@ -450,7 +442,6 @@ export default function App() {
       setMessages([...newMessages, errorMessage]);
       setError(error.message);
       
-      // Save error message to database
       try {
         await supabase
           .from('messages')
@@ -518,7 +509,6 @@ export default function App() {
       flexDirection: 'column',
       background: '#0f1419'
     }}>
-      {/* Error notification */}
       {error && (
         <div style={{
           position: 'fixed',
@@ -550,7 +540,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Header */}
       <div style={{ 
         background: '#1a2332', 
         borderBottom: '1px solid #2d3748',
@@ -642,7 +631,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div style={{ 
         flex: 1,
         display: 'flex',
@@ -650,7 +638,6 @@ export default function App() {
         overflow: 'hidden'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', gap: '16px', height: '100%' }}>
-          {/* Sidebar for conversations (only in ask mode on desktop) */}
           {mode === 'ask' && (
             <div style={{
               width: '280px',
@@ -710,7 +697,246 @@ export default function App() {
                     <p style={{
                       fontSize: '13px',
                       color: '#f7fafc',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}>
+                      Uploaded ({documents.length})
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {documents.map((doc) => (
+                        <div key={doc.id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px',
+                          background: '#0f1419',
+                          borderRadius: '6px',
+                          border: '1px solid #2d3748'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                            <FileText style={{ width: '16px', height: '16px', color: '#cbd5e0', flexShrink: 0 }} />
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <p style={{ 
+                                fontSize: '14px', 
+                                fontWeight: '500', 
+                                color: '#f7fafc',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>{doc.name}</p>
+                              <p style={{ 
+                                fontSize: '12px', 
+                                color: '#718096',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                              }}>
+                                {new Date(doc.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#cbd5e0',
+                              padding: '4px',
+                              flexShrink: 0
+                            }}
+                          >
+                            <X style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{
+                background: '#1a2332',
+                borderRadius: '8px',
+                border: '1px solid #2d3748',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px'
+                }}>
+                  {messages.length === 0 ? (
+                    <div style={{ 
+                      textAlign: 'center',
+                      color: '#718096',
+                      marginTop: '80px'
+                    }}>
+                      <p style={{ 
+                        fontSize: '16px', 
+                        marginBottom: '8px', 
+                        color: '#a0aec0', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        Ask a question
+                      </p>
+                      <p style={{ 
+                        fontSize: '14px', 
+                        color: '#718096', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        Press the mic or type
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: '70%',
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          background: msg.role === 'user' ? '#f7fafc' : '#0f1419',
+                          color: msg.role === 'user' ? '#0f1419' : '#f7fafc',
+                          border: msg.role === 'user' ? 'none' : '1px solid #2d3748',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                          fontSize: '15px',
+                          lineHeight: '1.5'
+                        }}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {isLoading && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                      <div style={{
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        background: '#0f1419',
+                        border: '1px solid #2d3748'
+                      }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite'
+                          }}></div>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite 0.15s'
+                          }}></div>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite 0.3s'
+                          }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <div style={{
+                  borderTop: '1px solid #2d3748',
+                  padding: '16px',
+                  display: 'flex',
+                  gap: '8px',
+                  background: '#0f1419',
+                  borderBottomLeftRadius: '8px',
+                  borderBottomRightRadius: '8px'
+                }}>
+                  <button
+                    onClick={toggleListening}
+                    disabled={isLoading}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      background: isListening ? '#f7fafc' : '#2d3748',
+                      color: isListening ? '#0f1419' : '#a0aec0',
+                      opacity: isLoading ? 0.5 : 1
+                    }}
+                  >
+                    {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                  </button>
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder={isListening ? "Listening..." : "Ask a question..."}
+                    disabled={isLoading}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      border: '1px solid #2d3748',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      background: '#1a2332',
+                      color: '#f7fafc',
+                      outline: 'none',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!input.trim() || isLoading}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: (input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
+                      background: '#f7fafc',
+                      color: '#0f1419',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      opacity: (input.trim() && !isLoading) ? 1 : 0.5,
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-6px); }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        input::placeholder {
+          color: #718096;
+        }
+      `}</style>
+    </div>
+  );
+}inkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -741,7 +967,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Main content area */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             {mode === 'settings' ? (
               <div style={{ 
@@ -931,3 +1156,16 @@ export default function App() {
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
                       }}>
                         {ALLOWED_FILE_TYPES.join(', ')} files (max 5MB each)
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                {documents.length > 0 && (
+                  <div style={{ marginTop: '24px' }}>
+                    <h3 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '500', 
+                      marginBottom: '8px', 
+                      color: '#e2e8f0',
+                      fontFamily: '-apple-system, Bl
