@@ -111,7 +111,19 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1419', margin: 0, padding: 0 }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      height: '100vh',
+      background: '#0f1419', 
+      margin: 0, 
+      padding: 0,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'hidden'
+    }}>
       {/* Header */}
       <div style={{ 
         background: '#1a2332', 
@@ -165,7 +177,13 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto', 
+        padding: '16px',
+        height: 'calc(100vh - 49px)',
+        overflowY: 'auto'
+      }}>
         {mode === 'manage' ? (
           <div style={{ 
             background: '#1a2332',
