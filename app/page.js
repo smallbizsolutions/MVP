@@ -169,10 +169,10 @@ export default function App() {
       {/* Main Content */}
       <div style={{ 
         flex: 1,
-        overflow: 'auto',
+        display: 'flex',
         padding: '16px'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', height: '100%' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>
           {mode === 'manage' ? (
             <div style={{ 
               background: '#1a2332',
