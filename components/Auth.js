@@ -7,7 +7,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('login'); // 'login' or 'signup'
+  const [mode, setMode] = useState('login');
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -57,7 +57,7 @@ export default function Auth() {
           marginBottom: '24px',
           color: '#f7fafc',
           textAlign: 'center',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
         }}>
           Employee Assistant
         </h2>
@@ -70,7 +70,7 @@ export default function Auth() {
               fontWeight: '500',
               marginBottom: '8px',
               color: '#e2e8f0',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
             }}>
               Email
             </label>
@@ -88,7 +88,7 @@ export default function Auth() {
                 background: '#0f1419',
                 color: '#f7fafc',
                 outline: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
               }}
             />
           </div>
@@ -100,7 +100,7 @@ export default function Auth() {
               fontWeight: '500',
               marginBottom: '8px',
               color: '#e2e8f0',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
             }}>
               Password
             </label>
@@ -118,7 +118,7 @@ export default function Auth() {
                 background: '#0f1419',
                 color: '#f7fafc',
                 outline: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
               }}
             />
           </div>
@@ -137,7 +137,7 @@ export default function Auth() {
               fontSize: '14px',
               fontWeight: '500',
               opacity: loading ? 0.5 : 1,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
             }}
           >
             {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
@@ -156,7 +156,7 @@ export default function Auth() {
               color: '#a0aec0',
               fontSize: '14px',
               cursor: 'pointer',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
             }}
           >
             {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
