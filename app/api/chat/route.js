@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { generateEmbedding, generateQueryHash } from '../../../lib/embeddings';
 
+export const maxDuration = 60; // Set max duration to 60 seconds for Vercel/Railway
+
 export async function POST(request) {
   try {
     const cookieStore = cookies();
