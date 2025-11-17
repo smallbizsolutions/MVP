@@ -14,8 +14,8 @@ export default function Loading() {
           border: '3px solid #2d3748',
           borderTop: '3px solid #f7fafc',
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 16px'
+          margin: '0 auto 16px',
+          animation: 'spin 1s linear infinite'
         }} />
         <p style={{
           color: '#a0aec0',
@@ -24,12 +24,6 @@ export default function Loading() {
           Loading...
         </p>
       </div>
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
