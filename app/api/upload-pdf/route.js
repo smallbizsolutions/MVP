@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
+import { checkUsageLimits } from '../../../lib/usageLimits';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_CONTENT_LENGTH = 200000; // 200k characters
 
 export async function POST(request) {
   try {
-    // Initialize Supabase client
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -22,7 +22,6 @@ export async function POST(request) {
       }
     );
 
-    // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -32,7 +31,20 @@ export async function POST(request) {
       );
     }
 
-    // Get user's profile to verify business_id
+    // Check usage limits
+    const limits = await checkUsageLimits(user.id);
+    
+    if (!limits.can_add_document) {
+      return NextResponse.json({
+        error: 'Document limit reached',
+        details: {
+          used: limits.documents_used,
+          limit: limits.documents_limit,
+          message: `You've reached your limit of ${limits.documents_limit} documents. Upgrade to Pro or Enterprise for unlimited documents.`
+        }
+      }, { status: 429 });
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('business_id')
@@ -46,7 +58,6 @@ export async function POST(request) {
       );
     }
 
-    // Parse the form data
     const formData = await request.formData();
     const file = formData.get('file');
     const fileName = formData.get('fileName');
@@ -58,7 +69,6 @@ export async function POST(request) {
       );
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
@@ -66,11 +76,9 @@ export async function POST(request) {
       );
     }
 
-    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Parse PDF
     let pdfData;
     try {
       pdfData = await pdf(buffer);
@@ -84,7 +92,6 @@ export async function POST(request) {
 
     let content = pdfData.text;
 
-    // Validate content
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
         { error: 'PDF appears to be empty or contains no readable text' },
@@ -92,17 +99,14 @@ export async function POST(request) {
       );
     }
 
-    // Truncate if too large
     if (content.length > MAX_CONTENT_LENGTH) {
       content = content.substring(0, MAX_CONTENT_LENGTH) + '\n\n[Content truncated due to length...]';
     }
 
-    // Sanitize filename
     const sanitizedFileName = (fileName || file.name)
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .substring(0, 255);
 
-    // Save to database
     const { data, error } = await supabase
       .from('documents')
       .insert({
@@ -126,13 +130,16 @@ export async function POST(request) {
       document: data,
       message: 'PDF uploaded successfully',
       charactersExtracted: content.length,
-      wasTruncated: pdfData.text.length > MAX_CONTENT_LENGTH
+      wasTruncated: pdfData.text.length > MAX_CONTENT_LENGTH,
+      usage: {
+        remaining: limits.documents_limit - (limits.documents_used + 1),
+        limit: limits.documents_limit
+      }
     });
 
   } catch (error) {
     console.error('PDF upload error:', error);
     
-    // Return user-friendly error
     let errorMessage = 'Failed to process PDF';
     if (error.message.includes('timeout')) {
       errorMessage = 'Upload timed out. Please try a smaller file.';
