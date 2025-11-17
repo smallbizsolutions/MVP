@@ -131,13 +131,14 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: 'none',
+                border: mode === 'ask' ? '1px solid #f7fafc' : '1px solid #2d3748',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                background: mode === 'ask' ? '#f7fafc' : '#2d3748',
-                color: mode === 'ask' ? '#0f1419' : '#a0aec0',
-                transition: 'all 0.2s'
+                background: mode === 'ask' ? '#2d3748' : 'transparent',
+                color: mode === 'ask' ? '#f7fafc' : '#a0aec0',
+                transition: 'all 0.2s',
+                fontFamily: 'inherit'
               }}
             >
               Ask
@@ -147,13 +148,14 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: 'none',
+                border: mode === 'manage' ? '1px solid #f7fafc' : '1px solid #2d3748',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                background: mode === 'manage' ? '#f7fafc' : '#2d3748',
-                color: mode === 'manage' ? '#0f1419' : '#a0aec0',
-                transition: 'all 0.2s'
+                background: mode === 'manage' ? '#2d3748' : 'transparent',
+                color: mode === 'manage' ? '#f7fafc' : '#a0aec0',
+                transition: 'all 0.2s',
+                fontFamily: 'inherit'
               }}
             >
               Manage
@@ -282,10 +284,10 @@ export default function App() {
                   color: '#718096',
                   marginTop: '80px'
                 }}>
-                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0' }}>
+                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0', fontFamily: 'inherit' }}>
                     Ask a question
                   </p>
-                  <p style={{ fontSize: '14px', color: '#718096' }}>
+                  <p style={{ fontSize: '14px', color: '#718096', fontFamily: 'inherit' }}>
                     Press the mic or type
                   </p>
                 </div>
