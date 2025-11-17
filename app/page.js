@@ -369,7 +369,9 @@ export default function App() {
                 padding: '16px',
                 display: 'flex',
                 gap: '8px',
-                background: '#0f1419'
+                background: '#0f1419',
+                borderBottomLeftRadius: '8px',
+                borderBottomRightRadius: '8px'
               }}>
                 <button
                   onClick={toggleListening}
