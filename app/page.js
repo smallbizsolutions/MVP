@@ -1,9 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Upload, X, FileText } from 'lucide-react';
+import { Mic, MicOff, Upload, X, FileText, LogOut } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import Auth from '../components/Auth';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState('ask');
   const [documents, setDocuments] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -12,6 +16,30 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    checkUser();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user ?? null);
+    setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setDocuments([]);
+    setMessages([]);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -80,10 +108,11 @@ export default function App() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-api-key': 'user-session'
         },
         body: JSON.stringify({
-          messages: messages,
+          messages: [...messages, userMessage],
           documents: documents
         })
       });
@@ -110,6 +139,26 @@ export default function App() {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0f1419'
+      }}>
+        <p style={{ color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' }}>
+          Loading...
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
   return (
     <div style={{ 
       position: 'fixed',
@@ -132,9 +181,16 @@ export default function App() {
           margin: '0 auto',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end'
+          justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#718096',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+          }}>
+            {user.email}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               onClick={() => setMode('ask')}
               style={{
@@ -166,6 +222,22 @@ export default function App() {
               }}
             >
               Manage
+            </button>
+            <button
+              onClick={handleSignOut}
+              style={{
+                padding: '8px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                background: 'transparent',
+                color: '#a0aec0',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+              title="Sign out"
+            >
+              <LogOut size={18} />
             </button>
           </div>
         </div>
