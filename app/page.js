@@ -131,14 +131,13 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: mode === 'ask' ? '1px solid #f7fafc' : '1px solid #2d3748',
+                border: '1px solid #2d3748',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
                 background: mode === 'ask' ? '#2d3748' : 'transparent',
                 color: mode === 'ask' ? '#f7fafc' : '#a0aec0',
-                transition: 'all 0.2s',
-                fontFamily: 'inherit'
+                transition: 'all 0.2s'
               }}
             >
               Ask
@@ -148,14 +147,13 @@ export default function App() {
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
-                border: mode === 'manage' ? '1px solid #f7fafc' : '1px solid #2d3748',
+                border: '1px solid #2d3748',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
                 background: mode === 'manage' ? '#2d3748' : 'transparent',
                 color: mode === 'manage' ? '#f7fafc' : '#a0aec0',
-                transition: 'all 0.2s',
-                fontFamily: 'inherit'
+                transition: 'all 0.2s'
               }}
             >
               Manage
@@ -284,10 +282,10 @@ export default function App() {
                   color: '#718096',
                   marginTop: '80px'
                 }}>
-                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0', fontFamily: 'inherit' }}>
+                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0' }}>
                     Ask a question
                   </p>
-                  <p style={{ fontSize: '14px', color: '#718096', fontFamily: 'inherit' }}>
+                  <p style={{ fontSize: '14px', color: '#718096' }}>
                     Press the mic or type
                   </p>
                 </div>
