@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "validate": "node scripts/validate-env.js",
+    "validate:test": "node scripts/validate-env.js --test-connections",
+    "prebuild": "node scripts/validate-env.js"
   },
   "dependencies": {
     "react": "^18",
