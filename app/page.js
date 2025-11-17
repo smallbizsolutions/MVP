@@ -244,25 +244,43 @@ export default function App() {
       return;
     }
 
-    setUploadProgress({ current: 0, total: files.length });
+    setUploadProgress({ current: 0, total: files.length, fileName: '', error: null });
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
+      setUploadProgress({ 
+        current: i, 
+        total: files.length, 
+        fileName: file.name,
+        error: null 
+      });
+      
       if (file.size > MAX_FILE_SIZE) {
-        alert(`${file.name} is too large (max 50MB)`);
+        setUploadProgress({ 
+          current: i, 
+          total: files.length, 
+          fileName: file.name,
+          error: `${file.name} is too large (max 50MB)` 
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
         continue;
       }
 
       const fileExt = '.' + file.name.split('.').pop().toLowerCase();
       if (!ALLOWED_FILE_TYPES.includes(fileExt)) {
-        alert(`${file.name} is not an allowed file type. Allowed: ${ALLOWED_FILE_TYPES.join(', ')}`);
+        setUploadProgress({ 
+          current: i, 
+          total: files.length, 
+          fileName: file.name,
+          error: `${file.name} is not an allowed file type` 
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
         continue;
       }
       
       try {
         if (fileExt === '.pdf') {
-          // Handle PDF files via API route (server-side)
           const formData = new FormData();
           formData.append('file', file);
           formData.append('fileName', file.name);
@@ -280,10 +298,7 @@ export default function App() {
           const { document } = await response.json();
           setDocuments([document, ...documents]);
         } else {
-          // Handle text files (.txt, .md) - client-side
           const content = await file.text();
-
-          // Truncate if too large (keep first 100k chars)
           const truncatedContent = content.length > 100000 
             ? content.substring(0, 100000) + '\n\n[Content truncated...]'
             : content;
@@ -306,10 +321,24 @@ export default function App() {
           }
         }
         
-        setUploadProgress({ current: i + 1, total: files.length });
+        setUploadProgress({ 
+          current: i + 1, 
+          total: files.length, 
+          fileName: file.name,
+          error: null 
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
       } catch (err) {
         console.error('Error uploading document:', err);
-        alert(`Failed to upload ${file.name}: ${err.message}`);
+        setUploadProgress({ 
+          current: i, 
+          total: files.length, 
+          fileName: file.name,
+          error: `Failed to upload ${file.name}: ${err.message}` 
+        });
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
 
@@ -922,8 +951,9 @@ export default function App() {
                     borderRadius: '8px',
                     padding: '32px',
                     textAlign: 'center',
-                    cursor: 'pointer',
-                    background: '#0f1419'
+                    cursor: uploadProgress ? 'not-allowed' : 'pointer',
+                    background: '#0f1419',
+                    position: 'relative'
                   }}>
                     <input
                       type="file"
@@ -934,32 +964,83 @@ export default function App() {
                       id="file-upload"
                       disabled={!!uploadProgress}
                     />
-                    <label htmlFor="file-upload" style={{ cursor: uploadProgress ? 'not-allowed' : 'pointer' }}>
-                      <Upload style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        color: '#718096',
-                        margin: '0 auto 8px'
-                      }} />
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#cbd5e0', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
-                      }}>
-                        {uploadProgress 
-                          ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
-                          : 'Upload documents'
-                        }
-                      </p>
-                      <p style={{ 
-                        fontSize: '12px', 
-                        color: '#718096', 
-                        marginTop: '4px', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
-                      }}>
-                        {ALLOWED_FILE_TYPES.join(', ')} files (max 50MB each)
-                      </p>
-                    </label>
+                    
+                    {uploadProgress ? (
+                      <div style={{ padding: '16px' }}>
+                        <p style={{ 
+                          fontSize: '14px', 
+                          color: '#cbd5e0', 
+                          marginBottom: '12px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                        }}>
+                          {uploadProgress.error ? '⚠️ Error' : '📤 Uploading'} {uploadProgress.fileName}
+                        </p>
+                        
+                        {uploadProgress.error ? (
+                          <div style={{
+                            padding: '12px',
+                            background: '#742a2a',
+                            color: '#feb2b2',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}>
+                            {uploadProgress.error}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{
+                              width: '100%',
+                              height: '8px',
+                              background: '#2d3748',
+                              borderRadius: '4px',
+                              overflow: 'hidden',
+                              marginBottom: '8px'
+                            }}>
+                              <div style={{
+                                width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                                height: '100%',
+                                background: '#48bb78',
+                                transition: 'width 0.3s ease',
+                                borderRadius: '4px'
+                              }} />
+                            </div>
+                            
+                            <p style={{ 
+                              fontSize: '13px', 
+                              color: '#a0aec0',
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                            }}>
+                              {uploadProgress.current} of {uploadProgress.total} files
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                        <Upload style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          color: '#718096',
+                          margin: '0 auto 8px'
+                        }} />
+                        <p style={{ 
+                          fontSize: '14px', 
+                          color: '#cbd5e0', 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                        }}>
+                          Click to upload documents
+                        </p>
+                        <p style={{ 
+                          fontSize: '12px', 
+                          color: '#718096', 
+                          marginTop: '4px', 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                        }}>
+                          {ALLOWED_FILE_TYPES.join(', ')} • Max 50MB each • Up to {MAX_FILES_PER_UPLOAD} files
+                        </p>
+                      </label>
+                    )}
                   </div>
                 </div>
 
