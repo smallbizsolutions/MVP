@@ -7,6 +7,7 @@ import Auth from '../components/Auth';
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState('ask');
   const [documents, setDocuments] = useState([]);
@@ -19,8 +20,11 @@ export default function App() {
 
   useEffect(() => {
     checkUser();
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -32,13 +36,42 @@ export default function App() {
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user ?? null);
+    if (session?.user) {
+      await loadProfile(session.user.id);
+    }
     setLoading(false);
+  };
+
+  const loadProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*, businesses(name)')
+      .eq('id', userId)
+      .single();
+    
+    if (data) {
+      setProfile(data);
+      await loadDocuments(data.business_id);
+    }
+  };
+
+  const loadDocuments = async (businessId) => {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+    
+    if (data) {
+      setDocuments(data);
+    }
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setDocuments([]);
     setMessages([]);
+    setProfile(null);
   };
 
   const scrollToBottom = () => {
@@ -82,18 +115,38 @@ export default function App() {
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const newDocs = [];
-
+    
     for (const file of files) {
       const text = await file.text();
-      newDocs.push({
-        name: file.name,
-        content: text,
-        uploadedAt: new Date().toISOString()
-      });
+      
+      const { data, error } = await supabase
+        .from('documents')
+        .insert({
+          business_id: profile.business_id,
+          name: file.name,
+          content: text,
+          uploaded_by: user.id
+        })
+        .select()
+        .single();
+      
+      if (data) {
+        setDocuments([data, ...documents]);
+      } else {
+        console.error('Error uploading document:', error);
+      }
     }
+  };
 
-    setDocuments([...documents, ...newDocs]);
+  const handleDeleteDocument = async (docId) => {
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', docId);
+    
+    if (!error) {
+      setDocuments(documents.filter(doc => doc.id !== docId));
+    }
   };
 
   const handleSendMessage = async () => {
@@ -188,7 +241,7 @@ export default function App() {
             color: '#718096',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
           }}>
-            {user.email}
+            {profile?.businesses?.name || 'Loading...'} • {user.email}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
@@ -325,8 +378,8 @@ export default function App() {
                     Uploaded ({documents.length})
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {documents.map((doc, idx) => (
-                      <div key={idx} style={{
+                    {documents.map((doc) => (
+                      <div key={doc.id} style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -349,12 +402,12 @@ export default function App() {
                               color: '#718096',
                               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                             }}>
-                              {new Date(doc.uploadedAt).toLocaleString()}
+                              {new Date(doc.created_at).toLocaleString()}
                             </p>
                           </div>
                         </div>
                         <button
-                          onClick={() => setDocuments(documents.filter((_, i) => i !== idx))}
+                          onClick={() => handleDeleteDocument(doc.id)}
                           style={{
                             background: 'none',
                             border: 'none',
