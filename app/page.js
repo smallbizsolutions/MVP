@@ -5,9 +5,9 @@ import { Mic, MicOff, Upload, X, FileText, LogOut, Edit2, Check, MessageSquare }
 import { supabase } from '../lib/supabase';
 import Auth from '../components/Auth';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB - increased from 5MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_FILES_PER_UPLOAD = 10;
-const ALLOWED_FILE_TYPES = ['.txt', '.md']; // Removed PDF for now - requires special library
+const ALLOWED_FILE_TYPES = ['.txt', '.md', '.pdf'];
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -60,7 +60,6 @@ export default function App() {
 
   const loadProfile = async (userId) => {
     try {
-      // First check if profile exists
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -69,7 +68,6 @@ export default function App() {
       
       if (profileError) {
         console.error('Profile error:', profileError);
-        // Profile might not exist yet, this is okay
         if (profileError.code === 'PGRST116') {
           console.log('Profile not found yet, this is normal for new users');
           setLoading(false);
@@ -79,7 +77,6 @@ export default function App() {
       }
       
       if (profileData) {
-        // Load business name separately if we have a business_id
         if (profileData.business_id) {
           const { data: businessData } = await supabase
             .from('businesses')
@@ -102,7 +99,6 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      // Don't set error state for missing profiles
       if (err.code !== 'PGRST116') {
         console.error('Unexpected error:', err);
       }
@@ -265,8 +261,24 @@ export default function App() {
       }
       
       try {
-        // Read file as text
-        const content = await file.text();
+        let content;
+
+        if (fileExt === '.pdf') {
+          // Handle PDF files
+          try {
+            const pdfParse = (await import('pdf-parse')).default;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfData = await pdfParse(Buffer.from(arrayBuffer));
+            content = pdfData.text;
+          } catch (pdfError) {
+            console.error('Error parsing PDF:', pdfError);
+            alert(`Failed to parse PDF: ${file.name}. Make sure it's a valid PDF file.`);
+            continue;
+          }
+        } else {
+          // Handle text files (.txt, .md)
+          content = await file.text();
+        }
 
         // Truncate if too large (keep first 100k chars)
         const truncatedContent = content.length > 100000 
@@ -293,7 +305,7 @@ export default function App() {
         setUploadProgress({ current: i + 1, total: files.length });
       } catch (err) {
         console.error('Error uploading document:', err);
-        alert(`Failed to upload ${file.name}`);
+        alert(`Failed to upload ${file.name}: ${err.message}`);
       }
     }
 
