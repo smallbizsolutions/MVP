@@ -71,15 +71,15 @@ export function middleware(request) {
     'camera=(), microphone=(self), geolocation=()'
   );
   
-  // Content Security Policy (more restrictive)
+  // Content Security Policy (FIXED FOR GEMINI API)
   response.headers.set(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline'; " + // Still need unsafe-inline for Next.js
+    "script-src 'self' 'unsafe-inline'; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https:; " +
     "font-src 'self' data:; " +
-    "connect-src 'self' https://*.supabase.co https://api.anthropic.com; " +
+    "connect-src 'self' https://*.supabase.co https://generativelanguage.googleapis.com; " +
     "frame-ancestors 'none';"
   );
 
