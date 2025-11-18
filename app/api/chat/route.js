@@ -10,6 +10,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 // Allow the function to run for up to 60 seconds
 export const maxDuration = 60;
 
+// Prevent caching so new uploads are seen immediately
+export const dynamic = 'force-dynamic';
+
 export async function POST(req) {
   try {
     // 1. Check if API Key exists
@@ -26,15 +29,19 @@ export async function POST(req) {
     // 3. Define the specific model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
-    // 4. Load Context (Reads both TXT and PDF files)
-    let contextData = "";
-    const documentsDir = path.join(process.cwd(), "public", "documents");
+    // 4. Define the storage path (Railway Volume logic)
+    // In production, this looks at the persistent volume /app/data
+    const documentsDir = process.env.NODE_ENV === "production" 
+      ? "/app/data" 
+      : path.join(process.cwd(), "public", "documents");
     
+    let contextData = "";
+
+    // 5. Read and Parse Files
     try {
        if (fs.existsSync(documentsDir)) {
          const files = fs.readdirSync(documentsDir);
          
-         // Loop through all files in the uploads folder
          for (const file of files) {
             const filePath = path.join(documentsDir, file);
             const fileName = file.toLowerCase();
@@ -49,7 +56,6 @@ export async function POST(req) {
                 // Handle .pdf files
                 else if (fileName.endsWith('.pdf')) {
                     const dataBuffer = fs.readFileSync(filePath);
-                    // Parse the PDF buffer to text
                     const pdfData = await pdf(dataBuffer);
                     contextData += `\n--- START OF SOURCE: ${file} ---\n${pdfData.text}\n`;
                     console.log(`Loaded PDF file: ${file}`);
@@ -63,8 +69,7 @@ export async function POST(req) {
        console.warn("Could not access documents directory:", dirError);
     }
 
-    // 5. Construct the prompt
-    // We truncate the context to 60,000 characters to be safe, though Gemini Flash can handle more.
+    // 6. Construct the prompt
     const cleanContext = contextData ? contextData.slice(0, 60000) : "No documents found.";
 
     const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
@@ -79,7 +84,7 @@ export async function POST(req) {
 
     const finalPrompt = `${systemInstruction}\n\nUSER QUESTION: ${message}`;
 
-    // 6. Generate Response
+    // 7. Generate Response
     const result = await model.generateContent(finalPrompt);
     const response = await result.response;
     const text = response.text();
