@@ -5,8 +5,8 @@ import { checkUsageLimits, incrementApiCall, logApiUsage } from '../../../lib/us
 
 export const maxDuration = 60;
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('CRITICAL: Missing ANTHROPIC_API_KEY environment variable');
+if (!process.env.GEMINI_API_KEY) {
+  console.error('CRITICAL: Missing GEMINI_API_KEY environment variable');
 }
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -18,7 +18,7 @@ export async function POST(request) {
   let userId, businessId;
 
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { error: 'Server configuration error: Missing API key' },
         { status: 500 }
@@ -116,12 +116,24 @@ export async function POST(request) {
       context += 'Based on the above documents, please answer the following question:\n\n';
     }
 
-    const contextualMessages = [
-      {
-        role: 'user',
-        content: context + userQuery,
-      },
-    ];
+    // Convert messages to Gemini format
+    const geminiContents = [];
+    
+    for (const msg of messages) {
+      const role = msg.role === 'assistant' ? 'model' : 'user';
+      geminiContents.push({
+        role: role,
+        parts: [{ text: msg.content }]
+      });
+    }
+
+    // Add context to the last user message
+    if (context && geminiContents.length > 0) {
+      const lastIndex = geminiContents.length - 1;
+      if (geminiContents[lastIndex].role === 'user') {
+        geminiContents[lastIndex].parts[0].text = context + geminiContents[lastIndex].parts[0].text;
+      }
+    }
 
     let response;
     let retries = 3;
@@ -129,19 +141,22 @@ export async function POST(request) {
 
     while (retries > 0) {
       try {
-        response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.ANTHROPIC_API_KEY,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 1024,
-            messages: contextualMessages,
-          }),
-        });
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: geminiContents,
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1024,
+              }
+            }),
+          }
+        );
 
         if (response.ok) {
           break;
@@ -169,23 +184,23 @@ export async function POST(request) {
     }
 
     if (!response || !response.ok) {
-      throw lastError || new Error('Failed to get response from Claude API');
+      throw lastError || new Error('Failed to get response from Gemini API');
     }
 
     const data = await response.json();
     
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      throw new Error('Invalid response format from Claude API');
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error('Invalid response format from Gemini API');
     }
 
-    const assistantResponse = data.content[0].text;
+    const assistantResponse = data.candidates[0].content.parts[0].text;
 
     // Increment API call counter
     await incrementApiCall(userId);
 
     // Log usage
     const responseTime = Date.now() - startTime;
-    const tokensUsed = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    const tokensUsed = (data.usageMetadata?.promptTokenCount || 0) + (data.usageMetadata?.candidatesTokenCount || 0);
     await logApiUsage(userId, businessId, '/api/chat', tokensUsed, responseTime, 200);
 
     return NextResponse.json({
