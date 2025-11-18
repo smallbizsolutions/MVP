@@ -28,11 +28,19 @@ export default function App() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    console.log('🔍 App mounted, checking user...');
     checkUser();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth event:', event);
+      console.log('📋 Session exists:', !!session);
+      console.log('🎟️ Access token exists:', !!session?.access_token);
+      if (session?.access_token) {
+        console.log('🎟️ Token preview:', session.access_token.substring(0, 20) + '...');
+      }
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('👤 User ID:', session.user.id);
         await loadProfile(session.user.id);
       }
       setLoading(false);
@@ -45,14 +53,17 @@ export default function App() {
 
   const checkUser = async () => {
     try {
+      console.log('🔍 Checking user session...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 Session found:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        console.log('👤 Loading profile for user:', session.user.id);
         await loadProfile(session.user.id);
       }
     } catch (err) {
-      console.error('Error checking user:', err);
+      console.error('❌ Error checking user:', err);
       setError('Failed to load user session');
     } finally {
       setLoading(false);
@@ -61,6 +72,7 @@ export default function App() {
 
   const loadProfile = async (userId) => {
     try {
+      console.log('📊 Loading profile for user:', userId);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -68,9 +80,9 @@ export default function App() {
         .single();
       
       if (profileError) {
-        console.error('Profile error:', profileError);
+        console.error('❌ Profile error:', profileError);
         if (profileError.code === 'PGRST116') {
-          console.log('Profile not found yet, this is normal for new users');
+          console.log('ℹ️ Profile not found yet, this is normal for new users');
           setLoading(false);
           return;
         }
@@ -78,7 +90,9 @@ export default function App() {
       }
       
       if (profileData) {
+        console.log('✅ Profile loaded:', profileData);
         if (profileData.business_id) {
+          console.log('🏢 Loading business:', profileData.business_id);
           const { data: businessData } = await supabase
             .from('businesses')
             .select('name')
@@ -86,6 +100,7 @@ export default function App() {
             .single();
           
           if (businessData) {
+            console.log('✅ Business loaded:', businessData);
             profileData.businesses = businessData;
             setBusinessName(businessData.name || '');
           }
@@ -99,7 +114,7 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.error('Error loading profile:', err);
+      console.error('❌ Error loading profile:', err);
       if (err.code !== 'PGRST116') {
         console.error('Unexpected error:', err);
       }
@@ -110,6 +125,7 @@ export default function App() {
 
   const loadDocuments = async (businessId) => {
     try {
+      console.log('📄 Loading documents for business:', businessId);
       const { data, error } = await supabase
         .from('documents')
         .select('*')
@@ -117,14 +133,18 @@ export default function App() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      if (data) setDocuments(data);
+      if (data) {
+        console.log('✅ Documents loaded:', data.length);
+        setDocuments(data);
+      }
     } catch (err) {
-      console.error('Error loading documents:', err);
+      console.error('❌ Error loading documents:', err);
     }
   };
 
   const loadConversations = async (businessId) => {
     try {
+      console.log('💬 Loading conversations for business:', businessId);
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
@@ -132,14 +152,18 @@ export default function App() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      if (data) setConversations(data);
+      if (data) {
+        console.log('✅ Conversations loaded:', data.length);
+        setConversations(data);
+      }
     } catch (err) {
-      console.error('Error loading conversations:', err);
+      console.error('❌ Error loading conversations:', err);
     }
   };
 
   const loadMessages = async (conversationId) => {
     try {
+      console.log('💬 Loading messages for conversation:', conversationId);
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -149,13 +173,14 @@ export default function App() {
       if (error) throw error;
       
       if (data) {
+        console.log('✅ Messages loaded:', data.length);
         setMessages(data.map(msg => ({
           role: msg.role,
           content: msg.content
         })));
       }
     } catch (err) {
-      console.error('Error loading messages:', err);
+      console.error('❌ Error loading messages:', err);
       setError('Failed to load messages');
     }
   };
@@ -167,6 +192,7 @@ export default function App() {
     }
     
     try {
+      console.log('✏️ Updating business name to:', businessName);
       const { error } = await supabase
         .from('businesses')
         .update({ name: businessName })
@@ -174,18 +200,20 @@ export default function App() {
       
       if (error) throw error;
       
+      console.log('✅ Business name updated');
       setProfile({
         ...profile,
         businesses: { name: businessName }
       });
       setEditingBusinessName(false);
     } catch (err) {
-      console.error('Error updating business name:', err);
+      console.error('❌ Error updating business name:', err);
       alert('Failed to update business name');
     }
   };
 
   const handleSignOut = async () => {
+    console.log('👋 Signing out...');
     await supabase.auth.signOut();
     setDocuments([]);
     setMessages([]);
@@ -212,15 +240,18 @@ export default function App() {
     }
 
     if (!session?.access_token) {
+      console.error('❌ No session token available for upload');
       setError('Not authenticated. Please sign in again.');
       return;
     }
 
+    console.log('📤 Starting file upload. Token exists:', !!session.access_token);
     setUploadProgress({ current: 0, total: files.length, fileName: '', error: null });
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
+      console.log(`📤 Uploading file ${i + 1}/${files.length}:`, file.name);
       setUploadProgress({ 
         current: i, 
         total: files.length, 
@@ -229,6 +260,7 @@ export default function App() {
       });
       
       if (file.size > MAX_FILE_SIZE) {
+        console.warn('⚠️ File too large:', file.name);
         setUploadProgress({ 
           current: i, 
           total: files.length, 
@@ -241,6 +273,7 @@ export default function App() {
 
       const fileExt = '.' + file.name.split('.').pop().toLowerCase();
       if (!ALLOWED_FILE_TYPES.includes(fileExt)) {
+        console.warn('⚠️ Invalid file type:', file.name);
         setUploadProgress({ 
           current: i, 
           total: files.length, 
@@ -257,6 +290,7 @@ export default function App() {
           formData.append('file', file);
           formData.append('fileName', file.name);
 
+          console.log('📤 Sending PDF to /api/upload-pdf');
           const response = await fetch('/api/upload-pdf', {
             method: 'POST',
             headers: {
@@ -265,14 +299,19 @@ export default function App() {
             body: formData
           });
 
+          console.log('📥 Upload response status:', response.status);
+          
           if (!response.ok) {
             const errorData = await response.json();
+            console.error('❌ Upload failed:', errorData);
             throw new Error(errorData.error || 'Failed to upload PDF');
           }
 
           const { document } = await response.json();
+          console.log('✅ PDF uploaded successfully:', document);
           setDocuments([document, ...documents]);
         } else {
+          console.log('📤 Uploading text file directly to Supabase');
           const content = await file.text();
           const truncatedContent = content.length > 100000 
             ? content.substring(0, 100000) + '\n\n[Content truncated...]'
@@ -292,6 +331,7 @@ export default function App() {
           if (error) throw error;
           
           if (data) {
+            console.log('✅ Text file uploaded:', data);
             setDocuments([data, ...documents]);
           }
         }
@@ -306,7 +346,7 @@ export default function App() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
       } catch (err) {
-        console.error('Error uploading document:', err);
+        console.error('❌ Error uploading document:', err);
         setUploadProgress({ 
           current: i, 
           total: files.length, 
@@ -327,21 +367,24 @@ export default function App() {
     }
 
     try {
+      console.log('🗑️ Deleting document:', docId);
       const { error } = await supabase
         .from('documents')
         .delete()
         .eq('id', docId);
       
       if (error) throw error;
+      console.log('✅ Document deleted');
       setDocuments(documents.filter(doc => doc.id !== docId));
     } catch (err) {
-      console.error('Error deleting document:', err);
+      console.error('❌ Error deleting document:', err);
       alert('Failed to delete document');
     }
   };
 
   const createNewConversation = async () => {
     try {
+      console.log('💬 Creating new conversation');
       const { data, error } = await supabase
         .from('conversations')
         .insert({
@@ -354,17 +397,19 @@ export default function App() {
       if (error) throw error;
       
       if (data) {
+        console.log('✅ Conversation created:', data);
         setCurrentConversation(data);
         setMessages([]);
         setConversations([data, ...conversations]);
       }
     } catch (err) {
-      console.error('Error creating conversation:', err);
+      console.error('❌ Error creating conversation:', err);
       alert('Failed to create conversation');
     }
   };
 
   const selectConversation = async (conv) => {
+    console.log('💬 Selecting conversation:', conv.id);
     setCurrentConversation(conv);
     await loadMessages(conv.id);
   };
@@ -375,6 +420,7 @@ export default function App() {
     }
 
     try {
+      console.log('🗑️ Deleting conversation:', convId);
       const { error } = await supabase
         .from('conversations')
         .delete()
@@ -382,13 +428,14 @@ export default function App() {
       
       if (error) throw error;
       
+      console.log('✅ Conversation deleted');
       setConversations(conversations.filter(c => c.id !== convId));
       if (currentConversation?.id === convId) {
         setCurrentConversation(null);
         setMessages([]);
       }
     } catch (err) {
-      console.error('Error deleting conversation:', err);
+      console.error('❌ Error deleting conversation:', err);
       alert('Failed to delete conversation');
     }
   };
@@ -401,13 +448,17 @@ export default function App() {
     }
 
     if (!session?.access_token) {
+      console.error('❌ No session token available for chat');
       setError('Not authenticated. Please sign in again.');
       return;
     }
 
+    console.log('💬 Sending message. Token exists:', !!session.access_token);
+
     let conversationId = currentConversation?.id;
     if (!conversationId) {
       try {
+        console.log('💬 Creating conversation for message');
         const { data } = await supabase
           .from('conversations')
           .insert({
@@ -418,6 +469,7 @@ export default function App() {
           .single();
         
         if (data) {
+          console.log('✅ Conversation created:', data);
           setCurrentConversation(data);
           setConversations([data, ...conversations]);
           conversationId = data.id;
@@ -425,7 +477,7 @@ export default function App() {
           throw new Error('Failed to create conversation');
         }
       } catch (err) {
-        console.error('Error creating conversation:', err);
+        console.error('❌ Error creating conversation:', err);
         alert('Failed to create conversation');
         return;
       }
@@ -439,6 +491,7 @@ export default function App() {
     setError(null);
 
     try {
+      console.log('💾 Saving user message to database');
       await supabase
         .from('messages')
         .insert({
@@ -447,10 +500,11 @@ export default function App() {
           content: userMessage.content
         });
     } catch (err) {
-      console.error('Error saving user message:', err);
+      console.error('❌ Error saving user message:', err);
     }
 
     try {
+      console.log('🤖 Sending to /api/chat');
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -462,12 +516,16 @@ export default function App() {
         })
       });
 
+      console.log('📥 Chat response status:', response.status);
+
       const data = await response.json();
       
       if (!response.ok || data.error) {
+        console.error('❌ Chat API error:', data);
         throw new Error(data.error || `Request failed with status ${response.status}`);
       }
 
+      console.log('✅ Chat response received');
       const assistantMessage = {
         role: 'assistant',
         content: data.choices[0].message.content
@@ -475,6 +533,7 @@ export default function App() {
 
       setMessages([...newMessages, assistantMessage]);
 
+      console.log('💾 Saving assistant message to database');
       await supabase
         .from('messages')
         .insert({
@@ -484,7 +543,7 @@ export default function App() {
         });
 
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('❌ Chat error:', error);
       const errorMessage = {
         role: 'assistant',
         content: `Error: ${error.message}`
@@ -501,7 +560,7 @@ export default function App() {
             content: errorMessage.content
           });
       } catch (err) {
-        console.error('Error saving error message:', err);
+        console.error('❌ Error saving error message:', err);
       }
     } finally {
       setIsLoading(false);
