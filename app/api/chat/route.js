@@ -25,29 +25,40 @@ export async function POST(req) {
             if (file === 'keep.txt') continue;
 
             if (file.endsWith('.txt')) {
-                contextData += `\n-- DOC: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
+                contextData += `\n-- DOCUMENT: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
             } else if (file.endsWith('.pdf')) {
                 const dataBuffer = fs.readFileSync(filePath);
                 const pdfData = await pdf(dataBuffer);
-                contextData += `\n-- DOC: ${file} --\n${pdfData.text}\n`;
+                contextData += `\n-- DOCUMENT: ${file} --\n${pdfData.text}\n`;
             }
          }
        }
     } catch (e) { console.warn("Read error", e); }
 
-    // 2. PROMPT
+    // 2. THE PROFESSIONAL PROMPT
     const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant.
     
-    Your role is to help employees with food safety and compliance questions.
-    
-    For greetings and casual conversation: Respond naturally and warmly, then offer to help with compliance questions.
-    
-    For compliance questions: Answer based ONLY on the provided Context Documents below. Cite the document name when you find the answer. If the answer is NOT in the documents, say "I couldn't find that in your official files," then provide a general answer based on common food safety knowledge.
-    
+    ROLE & TONE:
+    - You are a helpful, professional, and authoritative government assistant.
+    - Your tone should be polite, clear, and direct. Avoid robot-like language.
+    - Use "We" when referring to regulations (e.g., "We require..." or "The code states...").
+
+    FORMATTING RULES (CRITICAL):
+    - NEVER output a wall of text.
+    - Use **Bold Headers** to organize topics.
+    - Use Bullet points for lists.
+    - Add clear spacing between paragraphs.
+    - Keep responses concise. If a topic is complex, summarize the key points first.
+
+    KNOWLEDGE BASE:
+    - Answer based ONLY on the provided Context Documents.
+    - Always cite the specific document name (e.g., "According to the *Michigan Modified Food Code*...") so the user knows it's official.
+    - If the answer is NOT in the documents, say: "I could not find that specific detail in the official documents currently loaded," and then provide a general food safety best practice, clearly labeling it as general advice.
+
     CONTEXT DOCUMENTS:
     ${contextData.slice(0, 60000) || "No documents found."}`;
 
-    // 3. FIXED API REQUEST - Using Gemini 2.5 Flash (the latest free tier model)
+    // 3. API REQUEST (Gemini 2.5 Flash)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
