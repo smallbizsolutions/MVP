@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import pdf from "pdf-parse";
 
 // Initialize Gemini with your API Key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -23,37 +24,57 @@ export async function POST(req) {
     const { message } = await req.json();
 
     // 3. Define the specific model
-    // We use the '001' version to avoid "model not found" errors
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
-    // 4. Try to read the "Knowledge Base" file if it exists
+    // 4. Load Context (Reads both TXT and PDF files)
     let contextData = "";
     const documentsDir = path.join(process.cwd(), "public", "documents");
     
     try {
        if (fs.existsSync(documentsDir)) {
          const files = fs.readdirSync(documentsDir);
-         // Find the first .txt file
-         const txtFile = files.find(f => f.endsWith('.txt'));
          
-         if (txtFile) {
-           const filePath = path.join(documentsDir, txtFile);
-           contextData = fs.readFileSync(filePath, 'utf-8');
-           console.log(`Loaded context from: ${txtFile}`);
+         // Loop through all files in the uploads folder
+         for (const file of files) {
+            const filePath = path.join(documentsDir, file);
+            const fileName = file.toLowerCase();
+
+            try {
+                // Handle .txt files
+                if (fileName.endsWith('.txt')) {
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    contextData += `\n--- START OF SOURCE: ${file} ---\n${content}\n`;
+                    console.log(`Loaded text file: ${file}`);
+                }
+                // Handle .pdf files
+                else if (fileName.endsWith('.pdf')) {
+                    const dataBuffer = fs.readFileSync(filePath);
+                    // Parse the PDF buffer to text
+                    const pdfData = await pdf(dataBuffer);
+                    contextData += `\n--- START OF SOURCE: ${file} ---\n${pdfData.text}\n`;
+                    console.log(`Loaded PDF file: ${file}`);
+                }
+            } catch (err) {
+                console.error(`Error parsing file ${file}:`, err);
+            }
          }
        }
-    } catch (fileError) {
-       // If file reading fails, log it but don't crash the app
-       console.warn("Could not read context file:", fileError);
+    } catch (dirError) {
+       console.warn("Could not access documents directory:", dirError);
     }
 
     // 5. Construct the prompt
+    // We truncate the context to 60,000 characters to be safe, though Gemini Flash can handle more.
+    const cleanContext = contextData ? contextData.slice(0, 60000) : "No documents found.";
+
     const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
-    Use the following context to answer the user's question if relevant. 
-    If the context doesn't contain the answer, use your general knowledge but mention you are doing so.
     
-    CONTEXT:
-    ${contextData.slice(0, 30000)} 
+    Use the provided context (Official Food Code, Guidelines, etc.) to answer the user's question accurately. 
+    - If the answer is found in the context, cite the specific source (e.g., "According to the Michigan Modified Food Code...").
+    - If the context does not contain the answer, use your general knowledge but strictly warn the user: "I couldn't find this in your uploaded documents, but generally..."
+    
+    CONTEXT FROM UPLOADED FILES:
+    ${cleanContext}
     `; 
 
     const finalPrompt = `${systemInstruction}\n\nUSER QUESTION: ${message}`;
