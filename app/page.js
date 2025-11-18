@@ -1,13 +1,11 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { MessageSquare, Send } from 'lucide-react';
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -32,7 +30,8 @@ export default function Chat() {
       });
 
       const data = await res.json();
-
+      
+      // Handle API Errors
       if (data.error) throw new Error(data.error);
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
@@ -44,64 +43,54 @@ export default function Chat() {
     }
   };
 
+  // --- INLINE STYLES (Works without Tailwind) ---
+  const styles = {
+    container: { height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#111827', color: 'white', fontFamily: 'sans-serif' },
+    header: { padding: '20px', borderBottom: '1px solid #374151', backgroundColor: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px', fontWeight: 'bold' },
+    chatBox: { flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' },
+    inputArea: { padding: '20px', borderTop: '1px solid #374151', backgroundColor: '#1f2937', display: 'flex', gap: '10px' },
+    input: { flex: 1, padding: '15px', borderRadius: '8px', border: '1px solid #4b5563', backgroundColor: '#374151', color: 'white', fontSize: '16px', outline: 'none' },
+    button: { padding: '15px 25px', borderRadius: '8px', border: 'none', backgroundColor: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 'bold' },
+    bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#10b981', color: 'white', padding: '12px 18px', borderRadius: '12px 12px 0 12px', maxWidth: '80%', lineHeight: '1.5' },
+    bubbleBot: { alignSelf: 'flex-start', backgroundColor: '#374151', color: '#e5e7eb', padding: '12px 18px', borderRadius: '12px 12px 12px 0', maxWidth: '80%', lineHeight: '1.5', border: '1px solid #4b5563' }
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-800 bg-gray-900 flex justify-between items-center">
-        <h1 className="text-lg font-bold flex items-center gap-2">
-          <MessageSquare className="text-green-500" />
-          Compliance Assistant
-        </h1>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <MessageSquare color="#10b981" /> 
+        Compliance Assistant
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div style={styles.chatBox}>
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-20">
-            <p>Ask a question about Washtenaw County Food Code.</p>
+          <div style={{ textAlign: 'center', color: '#9ca3af', marginTop: '50px' }}>
+            <p>Welcome. I am ready to answer questions about the Food Code.</p>
           </div>
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-lg whitespace-pre-wrap ${
-              msg.role === 'user' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-100 border border-gray-700'
-            }`}>
-              {msg.content}
-            </div>
+          <div key={i} style={msg.role === 'user' ? styles.bubbleUser : styles.bubbleBot}>
+            {msg.content}
           </div>
         ))}
         
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 p-3 rounded-lg text-gray-400 animate-pulse">
-              Thinking...
-            </div>
-          </div>
-        )}
+        {loading && <div style={{ color: '#9ca3af', marginLeft: '10px' }}>Thinking...</div>}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 bg-gray-900 border-t border-gray-800">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your question..."
-            className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-green-500"
-            disabled={loading}
-          />
-          <button 
-            onClick={handleSendMessage}
-            disabled={loading}
-            className="bg-green-600 p-3 rounded-lg hover:bg-green-500 disabled:opacity-50"
-          >
-            <Send size={20} />
-          </button>
-        </div>
+      <div style={styles.inputArea}>
+        <input
+          style={styles.input}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+          placeholder="Ask about food safety..."
+          disabled={loading}
+        />
+        <button style={styles.button} onClick={handleSendMessage} disabled={loading}>
+          <Send size={20} />
+        </button>
       </div>
     </div>
   );
