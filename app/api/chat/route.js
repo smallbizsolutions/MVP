@@ -4,98 +4,49 @@ import fs from "fs";
 import path from "path";
 import pdf from "pdf-parse";
 
-// Initialize Gemini with your API Key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
-// Allow the function to run for up to 60 seconds
 export const maxDuration = 60;
-
-// Prevent caching so new uploads are seen immediately
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    // 1. Check if API Key exists
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY is not set in environment variables." },
-        { status: 500 }
-      );
-    }
-
-    // 2. Get the user's message
     const { message } = await req.json();
-
-    // 3. Define the specific model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
-    // 4. Define the storage path (Railway Volume logic)
-    // In production, this looks at the persistent volume /app/data
-    const documentsDir = process.env.NODE_ENV === "production" 
-      ? "/app/data" 
-      : path.join(process.cwd(), "public", "documents");
+    // SIMPLIFIED: Always look in the public/documents folder included in your code
+    const documentsDir = path.join(process.cwd(), "public", "documents");
     
     let contextData = "";
 
-    // 5. Read and Parse Files
+    // Read files
     try {
        if (fs.existsSync(documentsDir)) {
          const files = fs.readdirSync(documentsDir);
-         
          for (const file of files) {
             const filePath = path.join(documentsDir, file);
-            const fileName = file.toLowerCase();
-
-            try {
-                // Handle .txt files
-                if (fileName.endsWith('.txt')) {
-                    const content = fs.readFileSync(filePath, 'utf-8');
-                    contextData += `\n--- START OF SOURCE: ${file} ---\n${content}\n`;
-                    console.log(`Loaded text file: ${file}`);
-                }
-                // Handle .pdf files
-                else if (fileName.endsWith('.pdf')) {
-                    const dataBuffer = fs.readFileSync(filePath);
-                    const pdfData = await pdf(dataBuffer);
-                    contextData += `\n--- START OF SOURCE: ${file} ---\n${pdfData.text}\n`;
-                    console.log(`Loaded PDF file: ${file}`);
-                }
-            } catch (err) {
-                console.error(`Error parsing file ${file}:`, err);
+            if (file.endsWith('.txt')) {
+                contextData += `\n--- SOURCE: ${file} ---\n${fs.readFileSync(filePath, 'utf-8')}\n`;
+            } else if (file.endsWith('.pdf')) {
+                const dataBuffer = fs.readFileSync(filePath);
+                const pdfData = await pdf(dataBuffer);
+                contextData += `\n--- SOURCE: ${file} ---\n${pdfData.text}\n`;
             }
          }
        }
-    } catch (dirError) {
-       console.warn("Could not access documents directory:", dirError);
-    }
+    } catch (e) { console.warn("No context loaded", e); }
 
-    // 6. Construct the prompt
-    const cleanContext = contextData ? contextData.slice(0, 60000) : "No documents found.";
-
-    const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
+    // Prompt
+    const systemInstruction = `You are the Washtenaw County Compliance Assistant.
+    Answer using the following context. If the answer isn't there, rely on general food safety knowledge but state that you are doing so.
     
-    Use the provided context (Official Food Code, Guidelines, etc.) to answer the user's question accurately. 
-    - If the answer is found in the context, cite the specific source (e.g., "According to the Michigan Modified Food Code...").
-    - If the context does not contain the answer, use your general knowledge but strictly warn the user: "I couldn't find this in your uploaded documents, but generally..."
-    
-    CONTEXT FROM UPLOADED FILES:
-    ${cleanContext}
-    `; 
+    CONTEXT:
+    ${contextData.slice(0, 60000)}`; 
 
-    const finalPrompt = `${systemInstruction}\n\nUSER QUESTION: ${message}`;
-
-    // 7. Generate Response
-    const result = await model.generateContent(finalPrompt);
+    const result = await model.generateContent(`${systemInstruction}\n\nUSER QUESTION: ${message}`);
     const response = await result.response;
-    const text = response.text();
-
-    return NextResponse.json({ response: text });
+    return NextResponse.json({ response: response.text() });
 
   } catch (error) {
-    console.error("Chat error:", error);
-    return NextResponse.json(
-      { error: "Failed to process request: " + error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
