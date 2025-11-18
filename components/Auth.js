@@ -7,7 +7,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('login'); // 'login', 'signup', 'reset'
+  const [mode, setMode] = useState('login');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -19,7 +19,6 @@ export default function Auth() {
 
     try {
       if (mode === 'reset') {
-        // Password reset
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth/reset-password`,
         });
@@ -29,43 +28,22 @@ export default function Auth() {
         setMessage('Password reset email sent! Check your inbox.');
         setEmail('');
       } else if (mode === 'login') {
-        // Login
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
       } else {
-        // Signup
-        const { data, error } = await supabase.auth.signUp({
+        // Signup - let the trigger handle profile creation
+        const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
         
-        // Manually create profile and business if signup succeeds
-        if (data.user) {
-          try {
-            const { data: business } = await supabase
-              .from('businesses')
-              .insert({ name: 'My Business' })
-              .select()
-              .single();
-            
-            if (business) {
-              await supabase
-                .from('profiles')
-                .insert({
-                  id: data.user.id,
-                  business_id: business.id
-                });
-            }
-          } catch (profileError) {
-            console.error('Profile creation error:', profileError);
-          }
-        }
-        
         setMessage('Account created! You can now sign in.');
+        setMode('login');
+        setPassword('');
       }
     } catch (error) {
       setError(error.message);
