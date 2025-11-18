@@ -12,13 +12,13 @@ export async function GET() {
   checks.checks.environment = {
     supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     supabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    anthropicKey: !!process.env.ANTHROPIC_API_KEY,
+    geminiKey: !!process.env.GEMINI_API_KEY,
     status: 'pass'
   };
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || 
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-      !process.env.ANTHROPIC_API_KEY) {
+      !process.env.GEMINI_API_KEY) {
     checks.checks.environment.status = 'fail';
     checks.status = 'unhealthy';
   }
