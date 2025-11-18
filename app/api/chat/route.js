@@ -4,78 +4,60 @@ import fs from "fs";
 import path from "path";
 import pdf from "pdf-parse";
 
-// Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Allow the function to run for up to 60 seconds
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    // 1. Check API Key
     if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY is not set." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "API Key missing" }, { status: 500 });
     }
 
     const { message } = await req.json();
 
-    // *** CRITICAL FIX: Use "gemini-1.5-flash-latest" ***
-    // This is the specific tag that works best with the v1beta free tier
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    // *** THE FIX: Switch to the standard model ***
+    // "gemini-pro" is available on all accounts and won't 404.
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // 2. Load Context from your Public Folder
+    // --- 1. LOAD THE FILES (THE MEMORY) ---
     const documentsDir = path.join(process.cwd(), "public", "documents");
     let contextData = "";
 
     try {
        if (fs.existsSync(documentsDir)) {
          const files = fs.readdirSync(documentsDir);
-         
          for (const file of files) {
             const filePath = path.join(documentsDir, file);
-            const fileName = file.toLowerCase();
+            // Skip placeholder
+            if (file === 'keep.txt') continue;
 
-            // Skip the placeholder
-            if (fileName === 'keep.txt') continue;
-
-            try {
-                // Read Text Files
-                if (fileName.endsWith('.txt')) {
-                    contextData += `\n--- SOURCE: ${file} ---\n${fs.readFileSync(filePath, 'utf-8')}\n`;
-                } 
-                // Read PDF Files
-                else if (fileName.endsWith('.pdf')) {
-                    const dataBuffer = fs.readFileSync(filePath);
-                    const pdfData = await pdf(dataBuffer);
-                    contextData += `\n--- SOURCE: ${file} ---\n${pdfData.text}\n`;
-                }
-            } catch (err) {
-                console.error(`Error reading ${file}:`, err);
+            if (file.endsWith('.txt')) {
+                contextData += `\n-- DOCUMENT: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
+            } else if (file.endsWith('.pdf')) {
+                const dataBuffer = fs.readFileSync(filePath);
+                const pdfData = await pdf(dataBuffer);
+                contextData += `\n-- DOCUMENT: ${file} --\n${pdfData.text}\n`;
             }
          }
        }
-    } catch (e) {
-       console.warn("Context load error:", e);
-    }
+    } catch (e) { console.warn("Context read error", e); }
 
-    // 3. Construct the Prompt
-    const hasContext = contextData.length > 0;
+    // --- 2. DEFINE THE INSTRUCTIONS (THE BRAIN) ---
+    // This is where you control the bot's personality and rules.
+    const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
     
-    const systemInstruction = `You are the Washtenaw County Compliance Assistant.
-    
-    Use the context below to answer the user's question.
-    - Cite your sources if the answer is in the documents (e.g., "According to the Food Code...").
-    - If the answer is NOT in the documents, explicitly say: "I couldn't find this in your uploaded documents, but generally..." and then answer based on general food safety knowledge.
-    
+    YOUR INSTRUCTIONS:
+    1. Answer the user's question based ONLY on the provided Context Documents below.
+    2. If the answer is in the documents, cite the document name.
+    3. If the answer is NOT in the documents, state: "I couldn't find that in your official documents," and then provide a general answer based on standard food safety rules.
+    4. Be professional, concise, and helpful to restaurant owners.
+
     CONTEXT DOCUMENTS:
-    ${hasContext ? contextData.slice(0, 60000) : "No documents loaded."}
-    `; 
+    ${contextData.slice(0, 60000) || "No documents found."}`; 
 
-    // 4. Generate Response
+    // --- 3. GENERATE RESPONSE ---
     const result = await model.generateContent(`${systemInstruction}\n\nUSER QUESTION: ${message}`);
     const response = await result.response;
     
@@ -83,9 +65,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error("Gemini Error:", error);
-    return NextResponse.json(
-      { error: "AI Error: " + error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "AI Error: " + error.message }, { status: 500 });
   }
 }
