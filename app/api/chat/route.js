@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { checkUsageLimits, incrementApiCall, logApiUsage } from '../../../lib/usageLimits';
 
 export const maxDuration = 60;
 
+// Create Supabase client (simpler approach)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 if (!process.env.GEMINI_API_KEY) {
   console.error('CRITICAL: Missing GEMINI_API_KEY environment variable');
-}
-
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  console.error('CRITICAL: Missing Supabase environment variables');
 }
 
 export async function POST(request) {
@@ -25,22 +26,19 @@ export async function POST(request) {
       );
     }
 
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    // Get auth token from request header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -60,6 +58,7 @@ export async function POST(request) {
       }, { status: 429 });
     }
 
+    // Get profile with business_id
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('business_id')
@@ -67,6 +66,7 @@ export async function POST(request) {
       .single();
 
     if (profileError || !profile || !profile.business_id) {
+      console.error('Profile error:', profileError);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
@@ -95,6 +95,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Message too long (max 10000 characters)' }, { status: 400 });
     }
 
+    // Get documents
     const { data: documents, error: docsError } = await supabase
       .from('documents')
       .select('name, content')
