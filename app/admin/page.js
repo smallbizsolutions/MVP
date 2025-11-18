@@ -9,7 +9,6 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch the list of official files from your public folder
     fetch("/api/documents")
       .then((res) => res.json())
       .then((data) => {
@@ -23,24 +22,24 @@ export default function AdminDashboard() {
   }, []);
 
   const handleSignOut = async () => {
-    // Delete the auth cookie to log out
+    // Clear cookie
     document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     router.push("/login");
     router.refresh();
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1419] text-white p-8">
+    <div className="min-h-screen bg-[#0f1419] text-white p-8 font-sans">
       <div className="max-w-4xl mx-auto">
         {/* Header Section */}
         <div className="mb-8 border-b border-gray-800 pb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <ShieldCheck className="text-green-500" />
-              Compliance Reference Library
+              ComplianceHub
             </h1>
             <p className="text-gray-400 mt-2">
-              The following official regulations are active in the AI's knowledge base.
+              Active Knowledge Base & Reference Library
             </p>
           </div>
           <button 
@@ -55,7 +54,7 @@ export default function AdminDashboard() {
         {/* List of Documents */}
         {loading ? (
           <div className="text-center py-10 text-gray-500 animate-pulse">
-            Scanning repository for documents...
+            Scanning repository...
           </div>
         ) : (
           <div className="grid gap-4">
@@ -71,11 +70,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="bg-blue-500/10 p-3 rounded-lg">
-                      {doc.name.endsWith('.pdf') ? (
-                        <FileText className="text-red-400 w-6 h-6" />
-                      ) : (
-                        <FileText className="text-blue-400 w-6 h-6" />
-                      )}
+                      <FileText className="text-blue-400 w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-medium text-white">{doc.name}</h3>
@@ -84,11 +79,9 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs rounded-full border border-green-500/20 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                      Active
-                    </span>
+                  <div className="px-3 py-1 bg-green-500/10 text-green-400 text-xs rounded-full border border-green-500/20 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                    Active
                   </div>
                 </div>
               ))
