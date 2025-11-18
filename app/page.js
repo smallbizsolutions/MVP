@@ -101,7 +101,7 @@ export default function App() {
             </div>
             <div style={{ color: '#374151', fontSize: '14px', lineHeight: '1.8', marginBottom: '25px' }}>
               <p style={{ marginBottom: '10px' }}>1. <strong>Informational Only:</strong> Protocol organizes publicly available food safety regulations. It is NOT legal advice.</p>
-              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Protocol is not endorsed by any government agency.</p>
+              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Protocol is not affiliated with any government agency.</p>
               <p style={{ marginBottom: '10px' }}>3. <strong>Your Responsibility:</strong> You are responsible for verifying all info with official sources.</p>
               <p style={{ marginBottom: '10px' }}>4. <strong>No Liability:</strong> We are not liable for fines, violations, or penalties arising from use of this tool.</p>
             </div>
@@ -155,6 +155,7 @@ export default function App() {
           <div className="header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <button className="mobile-only" onClick={() => setIsMobileMenuOpen(true)} style={{ background: 'none', border: 'none', color: '#0f2545', cursor: 'pointer', padding: 0 }}><Menu size={24} /></button>
+              {/* --- HEADER TITLE UPDATED TO PROTOCOL --- */}
               <div className="header-title">
                 <span style={{ color: '#0f2545' }}>Protocol</span> 
                 <span style={{ color: '#6b7280', fontWeight: '400' }}> | Food Safety Intelligence</span>
@@ -168,8 +169,9 @@ export default function App() {
                 {messages.length === 0 && (
                   <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px', padding: '0 20px' }}>
                     <Shield size={60} color="#d1d5db" style={{ margin: '0 auto 20px' }} />
+                    {/* --- CENTER TITLE UPDATED --- */}
                     <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Protocol</h2>
-                    <p style={{ fontSize: '14px' }}>Ask questions about the loaded food safety regulations.</p>
+                    <p style={{ fontSize: '14px' }}>Food Safety & Compliance Intelligence</p>
                   </div>
                 )}
                 {messages.map((msg, i) => (
