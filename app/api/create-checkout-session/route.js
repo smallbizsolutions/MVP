@@ -17,7 +17,7 @@ export async function POST(request) {
 
   const { priceId } = await request.json()
   
-  // Map price IDs to plan names
+  // Map price IDs to plan names - $29 Pro, $49 Enterprise
   const planMap = {
     'price_1SVG96DlSrKA3nbArP6hvWXr': 'pro',
     'price_1SVG8KDlSrKA3nbAfEQje8j8': 'enterprise'
@@ -29,7 +29,6 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 })
   }
 
-  // Get Base URL
   let origin = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
   origin = origin.replace(/\/$/, '')
 
