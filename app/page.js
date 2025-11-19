@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, Camera, Trash2, Clock, Check, LogIn, Mail } from 'lucide-react';
+import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, Camera, Trash2, Clock, Check, LogIn } from 'lucide-react';
 
 // --- CONFIGURATION ---
 // REPLACE THESE WITH YOUR REAL IDs FROM STRIPE DASHBOARD
@@ -28,13 +28,10 @@ function LandingPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email) return;
-    
     setLoading(true);
     
-    // This detects if we are on localhost or production automatically
-    const redirectTo = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/callback` 
-      : undefined;
+    // Detects if we are on localhost or production automatically
+    const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
 
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
@@ -42,12 +39,8 @@ function LandingPage() {
     });
     
     setLoading(false);
-    
-    if (error) {
-      alert("Error: " + error.message);
-    } else {
-      setMagicLinkSent(true);
-    }
+    if (error) alert("Error: " + error.message);
+    else setMagicLinkSent(true);
   };
 
   // Stripe Checkout Handler
@@ -55,8 +48,7 @@ function LandingPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId })
       });
       const data = await res.json();
@@ -65,58 +57,39 @@ function LandingPage() {
     } catch (err) {
       console.error(err);
       alert("Failed to start checkout. Check console.");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
     <div style={{ fontFamily: 'sans-serif', color: '#1f2937', lineHeight: 1.5, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      
       {/* Login Modal */}
       {showLoginModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '30px', position: 'relative' }}>
             <button onClick={() => setShowLoginModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>Log In / Sign Up</h2>
-            <p style={{ marginBottom: '20px', color: '#6b7280' }}>Enter your email. We'll send you a magic link to sign in instantly.</p>
-
+            <p style={{ marginBottom: '20px', color: '#6b7280' }}>Enter your email. We'll send you a secure link to sign in instantly.</p>
             {magicLinkSent ? (
               <div style={{ backgroundColor: '#ecfdf5', padding: '15px', borderRadius: '8px', color: '#065f46', textAlign: 'center' }}>
                 <Check size={40} style={{ display: 'block', margin: '0 auto 10px' }} />
-                <strong>Check your email!</strong><br/>
-                We sent a login link to {email}
+                <strong>Check your email!</strong><br/>We sent a login link to {email}
               </div>
             ) : (
               <form onSubmit={handleLogin}>
-                <input 
-                  type="email" 
-                  placeholder="name@company.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '15px', fontSize: '16px' }}
-                  required
-                />
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#0f2545', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}
-                >
-                  {loading ? 'Sending...' : 'Send Magic Link'}
-                </button>
+                <input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '15px', fontSize: '16px' }} required />
+                <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: '#0f2545', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>{loading ? 'Sending...' : 'Send Login Link'}</button>
               </form>
             )}
           </div>
         </div>
       )}
 
-      {/* Navigation Bar */}
+      {/* Navigation Bar - THIS IS WHERE THE LOGIN BUTTON IS */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', borderBottom: '1px solid #f3f4f6' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '20px', color: '#0f2545' }}>
           <Shield size={28} /> Protocol
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
+        <div>
           <button onClick={() => setShowLoginModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: '2px solid #e5e7eb', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', cursor: 'pointer', fontWeight: '600', color: '#0f2545' }}>
             <LogIn size={16} /> Member Login
           </button>
@@ -125,50 +98,26 @@ function LandingPage() {
 
       {/* Hero Section */}
       <div style={{ textAlign: 'center', padding: '80px 20px', backgroundColor: '#f9fafb', flex: 1 }}>
-        <h1 style={{ fontSize: '48px', fontWeight: '800', marginBottom: '20px', color: '#0f2545' }}>
-          Food Safety Intelligence <br/> <span style={{ color: '#5D4037' }}>Simplified.</span>
-        </h1>
-        <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
-          AI-powered compliance for modern kitchens. Upload photos, ask questions, and stay audit-ready 24/7.
-        </p>
-        
-        {/* Call to Action Buttons */}
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
-           <button onClick={() => setShowLoginModal(true)} style={{ padding: '15px 30px', fontSize: '18px', fontWeight: 'bold', color: 'white', backgroundColor: '#5D4037', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-             Get Started Free
-           </button>
-        </div>
+        <h1 style={{ fontSize: '48px', fontWeight: '800', marginBottom: '20px', color: '#0f2545' }}>Food Safety Intelligence <br/> <span style={{ color: '#5D4037' }}>Simplified.</span></h1>
+        <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>AI-powered compliance for modern kitchens. Upload photos, ask questions, and stay audit-ready 24/7.</p>
+        <button onClick={() => setShowLoginModal(true)} style={{ padding: '15px 30px', fontSize: '18px', fontWeight: 'bold', color: 'white', backgroundColor: '#5D4037', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Get Started Free</button>
       </div>
 
       {/* Pricing Section */}
       <div style={{ padding: '60px 20px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
         <h2 style={{ textAlign: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '40px' }}>Choose Your Plan</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-          
           {/* Pro Plan */}
           <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '30px', backgroundColor: 'white' }}>
             <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Pro</h3>
             <div style={{ fontSize: '36px', fontWeight: '800', marginBottom: '20px' }}>$29<span style={{ fontSize: '16px', fontWeight: 'normal', color: '#6b7280' }}>/mo</span></div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '30px', color: '#4b5563' }}>
-              <li style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}><Check size={18} color="green"/> Unlimited AI Chat</li>
-              <li style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}><Check size={18} color="green"/> Photo Analysis</li>
-            </ul>
-            <button onClick={() => handleCheckout(STRIPE_PRICE_IDS.pro)} disabled={loading} style={{ width: '100%', padding: '15px', borderRadius: '8px', border: 'none', backgroundColor: '#0f2545', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-              {loading ? 'Processing...' : 'Subscribe to Pro'}
-            </button>
+            <button onClick={() => handleCheckout(STRIPE_PRICE_IDS.pro)} disabled={loading} style={{ width: '100%', padding: '15px', borderRadius: '8px', border: 'none', backgroundColor: '#0f2545', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>{loading ? 'Processing...' : 'Subscribe to Pro'}</button>
           </div>
-
           {/* Enterprise Plan */}
           <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '30px', backgroundColor: '#fff7ed' }}>
             <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '10px' }}>Enterprise</h3>
             <div style={{ fontSize: '36px', fontWeight: '800', marginBottom: '20px' }}>$49<span style={{ fontSize: '16px', fontWeight: 'normal', color: '#6b7280' }}>/mo</span></div>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '30px', color: '#4b5563' }}>
-              <li style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}><Check size={18} color="green"/> Everything in Pro</li>
-              <li style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}><Check size={18} color="green"/> Document Storage</li>
-            </ul>
-            <button onClick={() => handleCheckout(STRIPE_PRICE_IDS.enterprise)} disabled={loading} style={{ width: '100%', padding: '15px', borderRadius: '8px', border: 'none', backgroundColor: '#5D4037', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-              {loading ? 'Processing...' : 'Subscribe to Enterprise'}
-            </button>
+            <button onClick={() => handleCheckout(STRIPE_PRICE_IDS.enterprise)} disabled={loading} style={{ width: '100%', padding: '15px', borderRadius: '8px', border: 'none', backgroundColor: '#5D4037', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>{loading ? 'Processing...' : 'Subscribe to Enterprise'}</button>
           </div>
         </div>
       </div>
@@ -203,11 +152,9 @@ export default function App() {
       setSession(session);
       setAppLoading(false);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -217,12 +164,7 @@ export default function App() {
     async function checkTrialStatus() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('trial_ends_at')
-        .eq('id', user.id)
-        .single();
-
+      const { data: profile } = await supabase.from('user_profiles').select('trial_ends_at').eq('id', user.id).single();
       if (profile?.trial_ends_at) {
         const daysLeft = Math.ceil((new Date(profile.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
         if (daysLeft > 0 && daysLeft <= 7) setTrialDaysLeft(daysLeft);
