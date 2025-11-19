@@ -9,7 +9,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [view, setView] = useState('signup') // 'login' or 'signup'
+  const [view, setView] = useState('signup')
   
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -20,35 +20,43 @@ export default function Home() {
     setMessage(null)
 
     try {
-      // --- SIGN UP FLOW ---
       if (view === 'signup') {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // Redirect to pricing after email confirmation
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/pricing`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           }
         })
 
         if (error) throw error
 
-        // Case A: Session exists immediately (Email confirmation OFF)
+        // If session exists immediately (email confirmation disabled)
         if (data.session) {
+          // Create user profile
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: data.session.user.id,
+              email: data.session.user.email,
+              is_subscribed: false,
+              requests_used: 0
+            })
+
+          if (profileError && profileError.code !== '23505') {
+            console.error('Profile creation error:', profileError)
+          }
+
           router.push('/pricing')
-        } 
-        // Case B: No session yet (Email confirmation ON)
-        else {
+        } else {
+          // Email confirmation is required
           setMessage({ 
             type: 'success', 
-            text: 'Account created! Please check your email to confirm.' 
+            text: 'Account created! Please check your email to confirm before logging in.' 
           })
-          // Optional: Switch to login view so they can login after clicking email
-          // setView('login') 
         }
-      } 
-      // --- LOG IN FLOW ---
-      else {
+      } else {
+        // LOGIN FLOW
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -56,16 +64,18 @@ export default function Home() {
 
         if (error) throw error
 
-        // Check Subscription Status
+        // Check subscription status
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
           .eq('id', data.session.user.id)
           .single()
 
+        // If subscribed, go to dashboard
         if (profile?.is_subscribed) {
           router.push('/documents')
         } else {
+          // Not subscribed, send to pricing
           router.push('/pricing')
         }
       }
@@ -73,7 +83,6 @@ export default function Home() {
       console.error("Auth Error:", error)
       setMessage({ type: 'error', text: error.message })
     } finally {
-      // CRITICAL FIX: This guarantees the button stops saying "Processing..."
       setLoading(false)
     }
   }
@@ -151,6 +160,20 @@ export default function Home() {
             </div>
           )}
         </form>
+
+        {view === 'signup' && (
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <p className="text-center text-xs text-gray-500 mb-3">
+              Start with a 7-day free trial on any plan
+            </p>
+            <button
+              onClick={() => router.push('/pricing')}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded-xl transition"
+            >
+              View Plans & Pricing
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
