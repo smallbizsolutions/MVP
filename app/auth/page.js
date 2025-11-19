@@ -24,7 +24,7 @@ export default function Auth() {
     if (error) {
       setMessage('Error: ' + error.message);
     } else {
-      setMessage('Check your email for the login link!');
+      setMessage('Check your email for the secure login link.');
     }
     setLoading(false);
   };
@@ -49,8 +49,12 @@ export default function Auth() {
         textAlign: 'center',
         boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
       }}>
-        <h1 style={{ color: '#111827', marginBottom: '10px', fontSize: '24px' }}>Welcome to Protocol</h1>
-        <p style={{ color: '#6b7280', marginBottom: '20px' }}>Sign in with your email</p>
+        <h1 style={{ color: '#111827', marginBottom: '10px', fontSize: '24px', fontWeight: '600' }}>
+          Welcome to Protocol
+        </h1>
+        <p style={{ color: '#6b7280', marginBottom: '25px', fontSize: '14px', lineHeight: '1.5' }}>
+          Access food safety intelligence and compliance resources for Washtenaw County restaurants.
+        </p>
         
         <form onSubmit={handleLogin}>
           <input
@@ -83,12 +87,12 @@ export default function Auth() {
               color: 'white',
               border: 'none',
               borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.5 : 1
             }}
           >
-            {loading ? 'Sending...' : 'Send Magic Link'}
+            {loading ? 'Sending...' : 'Continue with Email'}
           </button>
         </form>
 
@@ -96,15 +100,18 @@ export default function Auth() {
           <p style={{ 
             marginTop: '20px', 
             color: message.includes('Error') ? '#dc2626' : '#059669',
-            fontSize: '14px'
+            fontSize: '14px',
+            padding: '10px',
+            backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
+            borderRadius: '6px'
           }}>
             {message}
           </p>
         )}
 
         <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '10px' }}>
-            Want premium features?
+          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+            Start your 7-day free trial
           </p>
           <button
             onClick={() => router.push('/pricing')}
@@ -120,7 +127,7 @@ export default function Auth() {
               cursor: 'pointer'
             }}
           >
-            View Pricing Plans
+            View Plans & Pricing
           </button>
         </div>
       </div>
