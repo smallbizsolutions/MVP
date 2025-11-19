@@ -138,7 +138,7 @@ export default function Pricing() {
             <h2 className="text-xl font-bold text-purple-400 mb-2">Enterprise</h2>
             
             <div className="flex items-baseline mb-1">
-              <span className="text-5xl font-extrabold tracking-tight text-white">$99</span>
+              <span className="text-5xl font-extrabold tracking-tight text-white">$49</span>
               <span className="ml-2 text-xl text-gray-400">/month</span>
             </div>
             
@@ -174,7 +174,7 @@ export default function Pricing() {
             >
               {loadingId === 'price_1SVG8KDlSrKA3nbAfEQje8j8' ? 'Processing...' : 'Start 7-Day Free Trial'}
             </button>
-             <p className="text-center text-xs text-gray-500 mt-3">Then $99/mo. Cancel anytime.</p>
+             <p className="text-center text-xs text-gray-500 mt-3">Then $49/mo. Cancel anytime.</p>
           </div>
         </div>
 
