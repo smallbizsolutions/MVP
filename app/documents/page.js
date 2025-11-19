@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// FULL LIST matching your GitHub screenshot
+// FULL LIST matching your GitHub screenshot exactly
 const DOCUMENTS = [
   { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
   { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Default closed on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false) 
   
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -47,7 +47,6 @@ export default function Dashboard() {
         return
       }
 
-      // Subscription Gate
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('is_subscribed')
@@ -108,13 +107,13 @@ export default function Dashboard() {
       const data = await response.json()
       
       if (data.error) {
-        throw new Error(data.error) // Catch API errors
+        throw new Error(data.error)
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
     } catch (error) {
       console.error(error)
-      setMessages(prev => [...prev, { role: 'assistant', content: `System Error: ${error.message}. Please try again.` }])
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}. Please try again.` }])
     } finally {
       setIsLoading(false)
     }
@@ -125,16 +124,15 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-[#0f1117] text-white font-sans overflow-hidden">
       
-      {/* MOBILE NAV HEADER */}
+      {/* MOBILE HEADER */}
       <div className="md:hidden fixed top-0 w-full bg-[#161b22] p-4 flex justify-between items-center z-50 border-b border-gray-800">
         <span className="font-bold tracking-wider text-sm">PROTOCOL</span>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 p-2">
-          {/* Hamburger Icon */}
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
 
-      {/* SIDEBAR - LIBRARY */}
+      {/* SIDEBAR */}
       <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-72 bg-[#161b22] border-r border-gray-800 flex flex-col z-40 pt-16 md:pt-0 shadow-2xl`}>
         <div className="p-5 hidden md:block border-b border-gray-800 bg-[#161b22]">
           <h1 className="text-lg font-bold text-white tracking-wide">PROTOCOL</h1>
@@ -144,7 +142,7 @@ export default function Dashboard() {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-2">Document Library</div>
           <div className="space-y-1">
-            {/* DYNAMICALLY MAP ALL DOCUMENTS HERE */}
+            {/* THIS LOOP IS THE FIX FOR THE MISSING FILES */}
             {DOCUMENTS.map((doc, idx) => (
               <button
                 key={idx}
@@ -174,10 +172,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* MAIN INTERFACE */}
+      {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col md:flex-row h-full relative bg-[#0f1117] pt-16 md:pt-0">
         
-        {/* PDF VIEWER (Desktop Only) */}
+        {/* PDF VIEWER */}
         <div className="flex-1 bg-[#0d1117] relative border-r border-gray-800 hidden md:block">
           <iframe 
             src={`/documents/${selectedDoc.filename}#toolbar=0`} 
@@ -186,9 +184,8 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* CHAT INTERFACE */}
+        {/* CHAT */}
         <div className="w-full md:w-[420px] bg-[#161b22] flex flex-col h-full shadow-2xl border-l border-gray-800">
-          {/* Chat Header */}
           <div className="p-4 border-b border-gray-800 bg-[#161b22] flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-white text-sm">AI Assistant</h2>
@@ -200,7 +197,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Message History */}
           <div className="flex-1 overflow-y-auto p-4 space-y-5 scrollbar-thin scrollbar-thumb-gray-700">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -229,10 +225,8 @@ export default function Dashboard() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Bar */}
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-[#161b22]">
             <div className="relative flex items-end gap-2">
-              {/* Upload Button */}
               <button 
                 type="button"
                 onClick={() => fileInputRef.current.click()}
