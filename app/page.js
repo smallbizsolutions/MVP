@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
+const COUNTIES = [
+  { value: 'washtenaw', label: 'Washtenaw County' },
+  { value: 'wayne', label: 'Wayne County' },
+  { value: 'oakland', label: 'Oakland County' }
+]
+
 export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [county, setCounty] = useState('washtenaw')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [view, setView] = useState('signup')
@@ -26,20 +33,23 @@ export default function Home() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              county: county
+            }
           }
         })
 
         if (error) throw error
 
         if (data.session) {
-          const { error: profileError } = await supabase.rpc('create_user_profile', {
-            user_id: data.session.user.id,
-            user_email: data.session.user.email
-          })
+          // User confirmed immediately (auto-confirm enabled)
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .update({ county: county })
+            .eq('id', data.session.user.id)
 
           if (profileError) {
-            console.error('Profile creation error:', profileError)
-            throw new Error('Failed to create user profile')
+            console.error('Profile update error:', profileError)
           }
 
           router.push('/pricing')
@@ -89,7 +99,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <p className="text-blue-100 text-sm">Washtenaw County Food Safety Compliance</p>
+          <p className="text-blue-100 text-sm">Southeast Michigan Restaurant Compliance</p>
         </div>
         
         <div className="space-y-6 relative z-10">
@@ -100,8 +110,8 @@ export default function Home() {
               </svg>
             </div>
             <div>
-              <h3 className="text-white font-medium mb-1">Instant Compliance Answers</h3>
-              <p className="text-blue-100 text-sm">Search through FDA Food Code, Michigan regulations, and local guidelines</p>
+              <h3 className="text-white font-medium mb-1">Multi-County Coverage</h3>
+              <p className="text-blue-100 text-sm">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties</p>
             </div>
           </div>
           
@@ -125,7 +135,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-medium mb-1">Complete Reference Library</h3>
-              <p className="text-blue-100 text-sm">Access 15+ essential documents and enforcement guidelines</p>
+              <p className="text-blue-100 text-sm">Access essential documents and enforcement guidelines for your county</p>
             </div>
           </div>
         </div>
@@ -142,7 +152,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
               protocol<span className="font-black">LM</span>
             </h1>
-            <p className="text-slate-600 text-sm">Washtenaw County Food Safety</p>
+            <p className="text-slate-600 text-sm">Southeast Michigan Restaurant Compliance</p>
           </div>
 
           <div className="mb-8">
@@ -180,6 +190,26 @@ export default function Home() {
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
+            {view === 'signup' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Your County
+                </label>
+                <select
+                  value={county}
+                  onChange={(e) => setCounty(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
+                >
+                  {COUNTIES.map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  Select where your restaurant operates. You can change this later.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email address
