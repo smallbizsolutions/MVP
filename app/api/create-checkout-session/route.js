@@ -17,28 +17,19 @@ export async function POST(request) {
 
   const { priceId } = await request.json()
   
-  // Grab the deployed URL
-  const origin = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  // 1. Get Base URL & Clean Trailing Slash
+  let origin = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  origin = origin.replace(/\/$/, '')
 
   try {
     const stripeSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      // Redirects here after payment
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
-      subscription_data: {
-        trial_period_days: 7,
-      },
-      metadata: {
-        userId: session.user.id,
-      }
+      subscription_data: { trial_period_days: 7 },
+      metadata: { userId: session.user.id }
     })
 
     return NextResponse.json({ url: stripeSession.url })
