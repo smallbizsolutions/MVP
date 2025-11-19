@@ -10,7 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [session, setSession] = useState(null)
-  const [view, setView] = useState('signup') // 'signup' or 'login'
+  const [view, setView] = useState('signup') // Toggle state: 'signup' or 'login'
   
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -28,8 +28,10 @@ export default function Home() {
     setLoading(true)
     setMessage(null)
 
-    // CRITICAL: Use the Railway URL variable
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
+    // 1. Grab the Base URL
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
+    // 2. Clean the trailing slash
+    baseUrl = baseUrl.replace(/\/$/, '')
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -55,17 +57,16 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white p-4">
       <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700">
         
-        {/* LOGO / TITLE */}
         <h1 className="text-2xl font-bold text-center mb-2">Welcome to Protocol</h1>
         <p className="text-gray-400 text-center mb-6 text-sm">
-          Food safety intelligence and compliance for Washtenaw County.
+          Food safety intelligence for Washtenaw County restaurants.
         </p>
 
         {session ? (
-          /* --- VIEW: ALREADY LOGGED IN --- */
+          // --- LOGGED IN VIEW ---
           <div className="text-center space-y-4">
             <div className="p-3 bg-green-900/20 border border-green-800 rounded text-green-200 text-sm">
-              You are logged in as <strong>{session.user.email}</strong>
+              Logged in as <strong>{session.user.email}</strong>
             </div>
             <Link 
               href="/documents" 
@@ -81,7 +82,7 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          /* --- VIEW: LOGIN / SIGNUP FORM --- */
+          // --- GUEST VIEW ---
           <>
             {/* TOGGLE BUTTONS */}
             <div className="flex border-b border-gray-700 mb-6">
@@ -131,13 +132,9 @@ export default function Home() {
           </>
         )}
 
-        {/* FOOTER LINK TO PRICING */}
         {!session && (
           <div className="mt-8 pt-6 border-t border-gray-700 text-center">
-            <Link 
-              href="/pricing"
-              className="text-sm text-gray-400 hover:text-white underline"
-            >
+            <Link href="/pricing" className="text-sm text-gray-400 hover:text-white underline">
               View Plans & Pricing
             </Link>
           </div>
