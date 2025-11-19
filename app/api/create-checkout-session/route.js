@@ -17,7 +17,19 @@ export async function POST(request) {
 
   const { priceId } = await request.json()
   
-  // 1. Get Base URL & Clean Trailing Slash
+  // Map price IDs to plan names
+  const planMap = {
+    'price_1SVG96DlSrKA3nbArP6hvWXr': 'pro',
+    'price_1SVG8KDlSrKA3nbAfEQje8j8': 'enterprise'
+  }
+
+  const plan = planMap[priceId]
+  
+  if (!plan) {
+    return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 })
+  }
+
+  // Get Base URL
   let origin = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
   origin = origin.replace(/\/$/, '')
 
@@ -28,8 +40,19 @@ export async function POST(request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
-      subscription_data: { trial_period_days: 7 },
-      metadata: { userId: session.user.id }
+      subscription_data: { 
+        trial_period_days: 7,
+        metadata: {
+          userId: session.user.id,
+          plan: plan
+        }
+      },
+      metadata: { 
+        userId: session.user.id,
+        plan: plan
+      },
+      customer_email: session.user.email,
+      allow_promotion_codes: true
     })
 
     return NextResponse.json({ url: stripeSession.url })
