@@ -1,35 +1,66 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Shield, Check, ArrowLeft } from 'lucide-react';
+import { Shield, Check, ArrowLeft, Loader2 } from 'lucide-react';
+
+// REPLACE THESE WITH YOUR ACTUAL STRIPE PRICE IDs FROM DASHBOARD
+const STRIPE_PRICE_IDS = {
+  pro: 'price_1Qxxxxxxxxxxxxxx',       // TODO: Replace with real Pro price ID
+  enterprise: 'price_1Qxxxxxxxxxxxxxx'  // TODO: Replace with real Enterprise price ID
+};
 
 export default function Pricing() {
   const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [user, setUser] = useState(null);
   const router = useRouter();
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
+
   const handleCheckout = async (priceId, plan) => {
-    setLoading(true);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
-      router.push('/auth');
+      // Redirect to auth if not logged in
+      router.push('/auth?redirect=pricing');
       return;
     }
 
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceId, plan }),
-    });
+    setLoading(true);
+    setSelectedPlan(plan);
 
-    const { url } = await res.json();
-    if (url) {
-      window.location.href = url;
-    } else {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/auth');
+        return;
+      }
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ priceId, plan }),
+      });
+
+      const data = await res.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'No checkout URL returned');
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start checkout: " + err.message);
       setLoading(false);
-      alert('Error creating checkout session. Please try again.');
+      setSelectedPlan(null);
     }
   };
 
@@ -86,7 +117,7 @@ export default function Pricing() {
             <ul style={{ textAlign: 'left', marginBottom: '30px', color: '#cbd5e0', listStyle: 'none', padding: 0 }}>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Full app access for 7 days</span>
+                <span>50 requests total</span>
               </li>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -116,7 +147,7 @@ export default function Pricing() {
                 fontSize: '16px'
               }}
             >
-              Start Free Trial
+              {user ? 'Current Plan' : 'Start Free Trial'}
             </button>
           </div>
 
@@ -155,7 +186,11 @@ export default function Pricing() {
             <ul style={{ textAlign: 'left', marginBottom: '30px', color: '#cbd5e0', listStyle: 'none', padding: 0 }}>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Unlimited messages</span>
+                <span><strong>500 requests/month</strong></span>
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>Everything in Free Trial</span>
               </li>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -163,21 +198,17 @@ export default function Pricing() {
               </li>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Advanced image analysis</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-                <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>Email support</span>
               </li>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Weekly compliance updates</span>
+                <span>Monthly compliance updates</span>
               </li>
             </ul>
 
             <button
-              onClick={() => handleCheckout('price_PRO_PLAN_ID', 'pro')}
-              disabled={loading}
+              onClick={() => handleCheckout(STRIPE_PRICE_IDS.pro, 'pro')}
+              disabled={loading && selectedPlan === 'pro'}
               style={{
                 width: '100%',
                 padding: '15px',
@@ -186,12 +217,17 @@ export default function Pricing() {
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: loading && selectedPlan === 'pro' ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
-                opacity: loading ? 0.5 : 1
+                opacity: loading && selectedPlan === 'pro' ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
               }}
             >
-              {loading ? 'Loading...' : 'Subscribe to Pro'}
+              {loading && selectedPlan === 'pro' && <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />}
+              {loading && selectedPlan === 'pro' ? 'Loading...' : 'Subscribe to Pro'}
             </button>
           </div>
 
@@ -214,6 +250,10 @@ export default function Pricing() {
             <ul style={{ textAlign: 'left', marginBottom: '30px', color: '#cbd5e0', listStyle: 'none', padding: 0 }}>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span><strong>Unlimited requests</strong></span>
+              </li>
+              <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>Everything in Pro</span>
               </li>
               <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
@@ -228,15 +268,11 @@ export default function Pricing() {
                 <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <span>Phone & priority support</span>
               </li>
-              <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-                <Check size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span>Dedicated account manager</span>
-              </li>
             </ul>
 
             <button
-              onClick={() => handleCheckout('price_ENTERPRISE_PLAN_ID', 'enterprise')}
-              disabled={loading}
+              onClick={() => handleCheckout(STRIPE_PRICE_IDS.enterprise, 'enterprise')}
+              disabled={loading && selectedPlan === 'enterprise'}
               style={{
                 width: '100%',
                 padding: '15px',
@@ -245,20 +281,33 @@ export default function Pricing() {
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 'bold',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: loading && selectedPlan === 'enterprise' ? 'not-allowed' : 'pointer',
                 fontSize: '16px',
-                opacity: loading ? 0.5 : 1
+                opacity: loading && selectedPlan === 'enterprise' ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
               }}
             >
-              {loading ? 'Loading...' : 'Subscribe to Enterprise'}
+              {loading && selectedPlan === 'enterprise' && <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />}
+              {loading && selectedPlan === 'enterprise' ? 'Loading...' : 'Subscribe to Enterprise'}
             </button>
           </div>
         </div>
 
         <div style={{ marginTop: '50px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
           <p>All plans include access to Washtenaw County-specific regulations, FDA, and USDA guidelines.</p>
+          <p style={{ marginTop: '10px' }}>Cancel anytime. No questions asked.</p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
