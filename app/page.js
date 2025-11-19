@@ -1,6 +1,13 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, Camera, Trash2 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js'; // Import Supabase
+import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, Camera, Trash2, Clock } from 'lucide-react';
+
+// Initialize Supabase Client
+// Ensure these variables exist in your .env.local file
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat'); 
@@ -13,8 +20,40 @@ export default function App() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   
+  // New state for Trial Status
+  const [trialDaysLeft, setTrialDaysLeft] = useState(null);
+   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // --- NEW: Check Trial Status Logic ---
+  useEffect(() => {
+    async function checkTrialStatus() {
+      // Safety check: ensure env vars are loaded
+      if (!supabaseUrl || !supabaseKey) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('trial_ends_at')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.trial_ends_at) {
+        const daysLeft = Math.ceil((new Date(profile.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+        
+        // Logic: Show warning if between 0 and 7 days
+        if (daysLeft > 0 && daysLeft <= 7) {
+          console.log(`Trial expires in ${daysLeft} days`);
+          setTrialDaysLeft(daysLeft); // Update state to show UI banner
+        }
+      }
+    }
+    checkTrialStatus();
+  }, []);
+  // -------------------------------------
 
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
@@ -91,7 +130,7 @@ export default function App() {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: data.response,
-        confidence: data.confidence // Store confidence with message
+        confidence: data.confidence
       }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Error: " + error.message }]);
@@ -189,6 +228,24 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {/* --- NEW: Trial Expiration Warning Banner --- */}
+          {trialDaysLeft !== null && (
+             <div style={{ 
+               backgroundColor: '#fff7ed', 
+               borderBottom: '1px solid #fdba74', 
+               padding: '10px 20px', 
+               display: 'flex', 
+               alignItems: 'center', 
+               gap: '10px',
+               color: '#c2410c',
+               fontSize: '14px'
+             }}>
+               <Clock size={16} />
+               <span><strong>Trial Ending Soon:</strong> Your free trial expires in {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''}.</span>
+             </div>
+          )}
+          {/* --------------------------------------------- */}
 
           {activeTab === 'chat' ? (
             <>
