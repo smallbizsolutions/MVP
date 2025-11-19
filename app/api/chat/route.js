@@ -14,41 +14,42 @@ export async function POST(request) {
   try {
     const { messages, image, docContext } = await request.json()
     
-    // 2. Initialize Gemini (1.5 Flash for speed + vision)
+    // 2. Initialize Gemini (Using 1.5 Flash - Latest Stable Fast Vision Model)
+    if (!process.env.GEMINI_API_KEY) {
+       throw new Error("GEMINI_API_KEY is missing in server variables")
+    }
+
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    
+    // Note: 'gemini-1.5-flash' is the correct model name for fast multimodal.
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const lastUserMessage = messages[messages.length - 1].content
 
     // 3. Strict System Prompt
     const systemPrompt = `
-      You are "Protocol", a highly strict Food Safety Compliance Assistant for Washtenaw County, MI.
+      You are "Protocol", a Food Safety Compliance Assistant for Washtenaw County, MI.
       
-      CONTEXT:
-      The user is referencing the official document: "${docContext}".
+      CONTEXT DOCUMENT: ${docContext || "General FDA Code"}
       
-      YOUR INSTRUCTIONS:
-      1. Answer ONLY based on Washtenaw County and FDA Food Code regulations.
-      2. If the user asks about anything unrelated to food safety (e.g., "Write me a poem", "What is the capital of France"), politely REFUSE. State that you are only authorized to discuss restaurant compliance.
-      3. When providing facts, EXPLICITLY reference the document "${docContext}" in **bold** format (e.g., "According to **${docContext}**...").
-      4. Do NOT hallucinate. If the answer is not standard food safety knowledge or found in the context of compliance, say "I cannot find that specific regulation."
-      5. Maintain a professional, inspector-like tone. No emojis. No slang.
+      INSTRUCTIONS:
+      1. Answer strictly based on Washtenaw County/FDA Food Code regulations.
+      2. If asked about non-food topics, polite refuse.
+      3. Cite the document name **${docContext}** in bold if relevant.
+      4. Be concise, professional, and inspector-like.
     `
 
-    // 4. Build Prompt Parts
+    // 4. Build Prompt
     let promptParts = [systemPrompt]
     
-    // Add conversation history
-    messages.forEach(m => {
-      promptParts.push(`${m.role}: ${m.content}`)
-    })
+    // History
+    messages.forEach(m => promptParts.push(`${m.role}: ${m.content}`))
     
-    // Add the latest user input
+    // Current Input
     promptParts.push(`user: ${lastUserMessage}`)
     
-    // 5. Handle Image Analysis
+    // Image Handling
     if (image) {
-      // Image format: "data:image/jpeg;base64,..."
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
       
@@ -58,10 +59,10 @@ export async function POST(request) {
           mimeType: mimeType
         }
       })
-      promptParts.push("INSTRUCTION: Analyze this image strictly for food safety violations, sanitary risks, or compliance issues based on Washtenaw County codes. Ignore non-food-safety elements.")
+      promptParts.push("Analyze this image for food safety violations based on Washtenaw County codes.")
     }
 
-    // 6. Generate Response
+    // 5. Generate Content
     const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
@@ -69,10 +70,11 @@ export async function POST(request) {
     return NextResponse.json({ message: text })
 
   } catch (error) {
-    console.error('Chat error:', error)
+    console.error('Gemini API Error:', error)
+    
+    // Return the ACTUAL error message to the frontend for easier debugging
     return NextResponse.json({ 
-      error: 'Failed to generate response', 
-      details: error.message 
+      error: `AI Error: ${error.message || "Unknown error"}` 
     }, { status: 500 })
   }
 }
