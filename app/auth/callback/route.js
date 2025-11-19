@@ -19,6 +19,9 @@ export async function GET(request) {
     }
 
     if (session) {
+      // Get county from user metadata (set during signup)
+      const county = session.user.user_metadata?.county || 'washtenaw'
+      
       // Create user profile using the database function (email confirmation scenario)
       const { error: profileError } = await supabase.rpc('create_user_profile', {
         user_id: session.user.id,
@@ -28,6 +31,16 @@ export async function GET(request) {
       // Log error but don't fail - profile might already exist
       if (profileError) {
         console.error('Profile creation error:', profileError)
+      }
+
+      // Update county if profile was created
+      const { error: countyError } = await supabase
+        .from('user_profiles')
+        .update({ county: county })
+        .eq('id', session.user.id)
+
+      if (countyError) {
+        console.error('County update error:', countyError)
       }
 
       // Check if user has subscription
