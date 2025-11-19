@@ -131,24 +131,59 @@ USER QUESTION: ${message || "Analyze this image for food safety compliance."}`;
       });
     }
 
-    // 4. API REQUEST (Gemini 2.5 Flash - Latest Stable Model)
+    // 4. API REQUEST WITH RETRY LOGIC (Gemini 2.5 Flash - Latest Stable Model)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents: [{ parts }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      })
-    });
+    let response;
+    let data;
+    let lastError;
+    const maxRetries = 3;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            contents: [{ parts }],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 2048,
+            }
+          })
+        });
 
-    const data = await response.json();
+        data = await response.json();
+
+        if (response.ok) {
+          break; // Success, exit retry loop
+        }
+        
+        // Check if it's a retryable error (503 Service Unavailable, 429 Too Many Requests, or overloaded)
+        const errorMessage = data.error?.message || '';
+        const isRetryable = response.status === 503 || 
+                           response.status === 429 || 
+                           errorMessage.includes('overloaded') ||
+                           errorMessage.includes('quota');
+        
+        if (!isRetryable || attempt === maxRetries - 1) {
+          throw new Error(errorMessage || "Google API Error");
+        }
+        
+        // Exponential backoff: wait 1s, 2s, 4s
+        const waitTime = Math.pow(2, attempt) * 1000;
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        
+      } catch (err) {
+        lastError = err;
+        if (attempt === maxRetries - 1) {
+          throw err;
+        }
+      }
+    }
 
     if (!response.ok) {
       console.error("Google API Error:", data);
@@ -169,8 +204,17 @@ USER QUESTION: ${message || "Analyze this image for food safety compliance."}`;
 
   } catch (error) {
     console.error("Chat API Error:", error);
+    
+    // Provide user-friendly error messages
+    let userMessage = error.message;
+    if (error.message.includes('overloaded') || error.message.includes('quota')) {
+      userMessage = "The AI service is currently experiencing high demand. Please try again in a moment.";
+    } else if (error.message.includes('API Key')) {
+      userMessage = "Configuration error. Please contact support.";
+    }
+    
     return NextResponse.json({ 
-      error: error.message || "An error occurred processing your request" 
+      error: userMessage
     }, { status: 500 });
   }
 }
