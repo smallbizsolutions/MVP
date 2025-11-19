@@ -1,29 +1,27 @@
-import { NextResponse } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
 
-export function middleware(request) {
-  // Get the cookie
-  const authCookie = request.cookies.get("auth_token");
-  const { pathname } = request.nextUrl;
+export async function middleware(req) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-  // If user is on the login page, let them stay
-  if (pathname === "/login") {
-    // Optional: If they are already logged in, send them to home
-    if (authCookie) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-    return NextResponse.next();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Allow access to auth pages without login
+  if (req.nextUrl.pathname.startsWith('/auth') || req.nextUrl.pathname.startsWith('/pricing')) {
+    return res;
   }
 
-  // If user is NOT logged in, send them to login
-  if (!authCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Require login for all other pages
+  if (!session) {
+    return NextResponse.redirect(new URL('/auth', req.url));
   }
 
-  // Allow request to proceed
-  return NextResponse.next();
+  return res;
 }
 
-// Apply this logic to all pages except API routes (so the login API works) and static files
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icon-192.png).*)'],
 };
