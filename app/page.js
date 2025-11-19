@@ -80,52 +80,58 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 to-slate-800 p-12 flex-col justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-white mb-2">protocol LM</h1>
-          <p className="text-slate-400 text-sm">Washtenaw County Food Safety Compliance</p>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
+        
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+            protocol<span className="font-black">LM</span>
+          </h1>
+          <p className="text-blue-100 text-sm">Washtenaw County Food Safety Compliance</p>
         </div>
         
-        <div className="space-y-6">
-          <div className="flex items-start space-x-4">
-            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="space-y-6 relative z-10">
+          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div>
               <h3 className="text-white font-medium mb-1">Instant Compliance Answers</h3>
-              <p className="text-slate-400 text-sm">Search through FDA Food Code, Michigan regulations, and local guidelines</p>
+              <p className="text-blue-100 text-sm">Search through FDA Food Code, Michigan regulations, and local guidelines</p>
             </div>
           </div>
           
-          <div className="flex items-start space-x-4">
-            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.2s' }}>
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               </svg>
             </div>
             <div>
               <h3 className="text-white font-medium mb-1">Photo Analysis</h3>
-              <p className="text-slate-400 text-sm">Upload images to identify potential violations and get remediation guidance</p>
+              <p className="text-blue-100 text-sm">Upload images to identify potential violations and get remediation guidance</p>
             </div>
           </div>
           
-          <div className="flex items-start space-x-4">
-            <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.3s' }}>
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <div>
               <h3 className="text-white font-medium mb-1">Complete Reference Library</h3>
-              <p className="text-slate-400 text-sm">Access 15+ essential documents and enforcement guidelines</p>
+              <p className="text-blue-100 text-sm">Access 15+ essential documents and enforcement guidelines</p>
             </div>
           </div>
         </div>
         
-        <div className="text-slate-500 text-xs">
-          © 2024 protocol LM. All rights reserved.
+        <div className="text-blue-200 text-xs relative z-10">
+          © 2024 protocolLM. All rights reserved.
         </div>
       </div>
 
@@ -133,7 +139,9 @@ export default function Home() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <h1 className="text-2xl font-semibold text-slate-900 mb-1">protocol LM</h1>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+              protocol<span className="font-black">LM</span>
+            </h1>
             <p className="text-slate-600 text-sm">Washtenaw County Food Safety</p>
           </div>
 
@@ -181,7 +189,7 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
                 placeholder="you@restaurant.com"
               />
             </div>
@@ -196,7 +204,7 @@ export default function Home() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
                 placeholder="••••••••"
               />
             </div>
@@ -204,7 +212,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? 'Processing...' : (view === 'signup' ? 'Create account' : 'Sign in')}
             </button>
@@ -235,6 +243,42 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-30px) translateX(10px); }
+        }
+        
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
+        
+        .animate-float-delayed {
+          animation: float-delayed 10s ease-in-out infinite;
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.6s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
     </div>
   )
 }
