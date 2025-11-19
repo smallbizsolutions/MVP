@@ -33,7 +33,7 @@ export default function Auth() {
     <div style={{
       height: '100vh',
       width: '100vw',
-      backgroundColor: '#111827',
+      backgroundColor: '#ffffff',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -47,13 +47,14 @@ export default function Auth() {
         width: '100%',
         maxWidth: '400px',
         textAlign: 'center',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        border: '1px solid #e2e8f0'
       }}>
-        <h1 style={{ color: '#111827', marginBottom: '10px', fontSize: '24px', fontWeight: '600' }}>
-          Welcome to Protocol
+        <h1 style={{ color: '#0f172a', marginBottom: '10px', fontSize: '24px', fontWeight: '600' }}>
+          protocol LM
         </h1>
-        <p style={{ color: '#6b7280', marginBottom: '25px', fontSize: '14px', lineHeight: '1.5' }}>
-          Access food safety intelligence and compliance resources for Washtenaw County restaurants.
+        <p style={{ color: '#64748b', marginBottom: '25px', fontSize: '14px', lineHeight: '1.5' }}>
+          Access food safety compliance resources for Washtenaw County restaurants.
         </p>
         
         <form onSubmit={handleLogin}>
@@ -65,13 +66,13 @@ export default function Auth() {
             required
             style={{
               width: '100%',
-              padding: '15px',
-              fontSize: '16px',
-              border: '2px solid #e5e7eb',
+              padding: '12px',
+              fontSize: '14px',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
-              marginBottom: '20px',
-              color: '#000000',
-              backgroundColor: '#f9fafb',
+              marginBottom: '16px',
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
               boxSizing: 'border-box'
             }}
           />
@@ -81,9 +82,9 @@ export default function Auth() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '15px',
-              fontSize: '16px',
-              backgroundColor: '#5D4037',
+              padding: '12px',
+              fontSize: '14px',
+              backgroundColor: '#0f172a',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -98,9 +99,9 @@ export default function Auth() {
 
         {message && (
           <p style={{ 
-            marginTop: '20px', 
+            marginTop: '16px', 
             color: message.includes('Error') ? '#dc2626' : '#059669',
-            fontSize: '14px',
+            fontSize: '13px',
             padding: '10px',
             backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
             borderRadius: '6px'
@@ -109,28 +110,5 @@ export default function Auth() {
           </p>
         )}
 
-        <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
-            Start your 7-day free trial
-          </p>
-          <button
-            onClick={() => router.push('/pricing')}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '14px',
-              backgroundColor: '#f3f4f6',
-              color: '#1f2937',
-              border: '2px solid #e5e7eb',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: 'pointer'
-            }}
-          >
-            View Plans & Pricing
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom:
