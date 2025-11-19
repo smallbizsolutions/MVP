@@ -1,17 +1,20 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, File, Phone, Mail, User } from 'lucide-react';
+import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, File, Camera, Trash2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat'); 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [image, setImage] = useState(null); // Store base64 image
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null); // Hidden file input
 
   // --- CHECK IF TERMS ACCEPTED ON LOAD ---
   useEffect(() => {
@@ -46,21 +49,51 @@ export default function App() {
     alert('You must accept the terms to use Protocol.');
   };
 
+  // Handle Image Selection
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result); // This creates a base64 string
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!input.trim() || !termsAccepted) return;
-    const userMessage = { role: 'user', content: input };
+    if ((!input.trim() && !image) || !termsAccepted) return;
+
+    // Create message object (optimistic update)
+    const userMessage = { 
+      role: 'user', 
+      content: input, 
+      image: image // Store image for display
+    };
+
     setMessages(prev => [...prev, userMessage]);
+    const payloadInput = input;
+    const payloadImage = image;
+
+    // Clear inputs immediately
     setInput('');
+    setImage(null);
     setLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
+        body: JSON.stringify({ 
+          message: payloadInput,
+          image: payloadImage // Send the image data
+        })
       });
+      
       const data = await res.json();
+      
       if (data.error) throw new Error(data.error);
+      
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Error: " + error.message }]);
@@ -70,6 +103,7 @@ export default function App() {
   };
 
   const formatMessage = (text) => {
+    if (!text) return null;
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>;
@@ -101,7 +135,7 @@ export default function App() {
             </div>
             <div style={{ color: '#374151', fontSize: '14px', lineHeight: '1.8', marginBottom: '25px' }}>
               <p style={{ marginBottom: '10px' }}>1. <strong>Informational Only:</strong> Protocol organizes publicly available food safety regulations. It is NOT legal advice.</p>
-              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Protocol is not endorsed by any government agency.</p>
+              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Protocol is not affiliated with any government agency.</p>
               <p style={{ marginBottom: '10px' }}>3. <strong>Your Responsibility:</strong> You are responsible for verifying all info with official sources.</p>
               <p style={{ marginBottom: '10px' }}>4. <strong>No Liability:</strong> We are not liable for fines, violations, or penalties arising from use of this tool.</p>
             </div>
@@ -169,21 +203,59 @@ export default function App() {
                   <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px', padding: '0 20px' }}>
                     <Shield size={60} color="#d1d5db" style={{ margin: '0 auto 20px' }} />
                     <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Protocol</h2>
-                    <p style={{ fontSize: '14px' }}>Ask questions about the loaded food safety regulations.</p>
+                    <p style={{ fontSize: '14px' }}>Ask questions or upload photos of your kitchen setup.</p>
                   </div>
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`bubble ${msg.role === 'user' ? 'user' : 'bot'}`}>
+                    {/* Show User Image if exists */}
+                    {msg.image && (
+                      <img src={msg.image} alt="User upload" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '10px', display: 'block' }} />
+                    )}
                     {formatMessage(msg.content)}
                   </div>
                 ))}
-                {loading && <div style={{ marginLeft: '20px', color: '#6b7280', fontStyle: 'italic', fontSize: '14px' }}>Consulting regulations...</div>}
+                {loading && <div style={{ marginLeft: '20px', color: '#6b7280', fontStyle: 'italic', fontSize: '14px' }}>Analyzing...</div>}
                 <div ref={messagesEndRef} />
               </div>
               
+              {/* Input Area with Camera */}
               <div className="input-area">
-                <input className="chat-input" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} placeholder="Type your question here..." disabled={loading || !termsAccepted} />
-                <button className="send-button" onClick={handleSendMessage} disabled={loading || !termsAccepted}><Send size={20} /></button>
+                {/* Hidden File Input */}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={fileInputRef} 
+                  onChange={handleImageSelect}
+                  style={{ display: 'none' }} 
+                />
+                
+                {/* Image Preview Badge */}
+                {image && (
+                  <div style={{ position: 'absolute', bottom: '70px', left: '20px', backgroundColor: '#e0e7ff', padding: '5px 10px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: '#0f2545', border: '1px solid #0f2545' }}>
+                    <span>📸 Image attached</span>
+                    <button onClick={() => setImage(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                  </div>
+                )}
+
+                <button 
+                  onClick={() => fileInputRef.current.click()}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: '#5D4037' }}
+                >
+                  <Camera size={24} />
+                </button>
+
+                <input 
+                  className="chat-input" 
+                  value={input} 
+                  onChange={(e) => setInput(e.target.value)} 
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
+                  placeholder={image ? "Ask about this image..." : "Type question or upload photo..."}
+                  disabled={loading || !termsAccepted} 
+                />
+                <button className="send-button" onClick={handleSendMessage} disabled={loading || !termsAccepted}>
+                  <Send size={20} />
+                </button>
               </div>
             </>
           ) : activeTab === 'documents' ? (
@@ -199,8 +271,6 @@ export default function App() {
           ) : (
             <div className="scroll-content">
               <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>Help & Support</h2>
-              
-              {/* Official Compliance Help */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '20px' }}>
                 <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>Official Health Questions</h3>
                 <p style={{ marginBottom: '15px', color: '#4b5563' }}>
@@ -212,27 +282,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* App Technical Support */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                 <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>App Technical Support</h3>
                 <p style={{ marginBottom: '15px', color: '#4b5563' }}>
                   For login issues, subscription management, or technical support:
                 </p>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#374151' }}>
-                    <User size={20} color="#5D4037" />
-                    <span>Austin Northrup</span> 
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#374151' }}>
-                    <Phone size={20} color="#5D4037" />
-                    <span>734-216-4836</span> 
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#374151' }}>
-                    <Mail size={20} color="#5D4037" />
-                    <span>austinrnorthrop@gmail.com</span> 
-                  </div>
-                </div>
+                <div style={{ fontWeight: 'bold', color: '#0f2545' }}>Contact: austinrnorthrop@gmail.com</div>
               </div>
             </div>
           )}
@@ -250,7 +305,7 @@ export default function App() {
           .bubble { padding: 15px 20px; max-width: 85%; line-height: 1.6; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
           .bubble.user { align-self: flex-end; background-color: #0f2545; color: white; border-radius: 12px 12px 0 12px; }
           .bubble.bot { align-self: flex-start; background-color: #ffffff; color: #374151; border-radius: 12px 12px 12px 0; border: 1px solid #e5e7eb; white-space: pre-wrap; }
-          .input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; align-items: center; flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+          .input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #e5e7eb; display: flex; gap: 10px; align-items: center; flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); position: relative; }
           .chat-input { flex: 1; padding: 14px; border-radius: 8px; border: 1px solid #d1d5db; background-color: #ffffff; color: #1f2937; font-size: 16px; outline: none; }
           .send-button { padding: 14px 20px; border-radius: 8px; border: none; background-color: #5D4037; color: white; cursor: pointer; display: flex; align-items: center; justifyContent: center; }
           .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
