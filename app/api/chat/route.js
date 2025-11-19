@@ -63,8 +63,8 @@ USER QUESTION: ${message || "Analyze this image for food safety compliance."}`;
       });
     }
 
-    // 4. API REQUEST (Gemini 2.0 Flash)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+    // 4. API REQUEST (Gemini 2.5 Flash - Latest Stable Model)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: 'POST',
