@@ -13,10 +13,9 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    // ✅ CHECK SUBSCRIPTION STATUS
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('is_subscribed, requests_used')
+      .select('is_subscribed, requests_used, images_used')
       .eq('id', session.user.id)
       .single()
 
@@ -31,29 +30,31 @@ export async function POST(request) {
       }, { status: 403 })
     }
 
-    // ✅ CHECK REQUEST LIMITS
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('plan, status')
       .eq('user_id', session.user.id)
       .single()
 
-    // Define monthly limits per plan
-    const limits = {
-      pro: 1000,
-      enterprise: 10000
-    }
+    const limits = subscription?.plan === 'enterprise' 
+      ? { requests: 5000, images: 500 }
+      : { requests: 500, images: 50 }
 
-    const userLimit = limits[subscription?.plan] || 1000
+    const { messages, image } = await request.json()
 
-    if (profile.requests_used >= userLimit) {
+    // Check request limit
+    if (profile.requests_used >= limits.requests) {
       return NextResponse.json({ 
-        error: `Monthly limit of ${userLimit} requests reached. Resets on your next billing date.` 
+        error: `Monthly limit of ${limits.requests} queries reached. Resets on your next billing date.` 
       }, { status: 429 })
     }
 
-    // ✅ PROCEED WITH CHAT REQUEST
-    const { messages, image } = await request.json()
+    // Check image limit if image is included
+    if (image && profile.images_used >= limits.images) {
+      return NextResponse.json({ 
+        error: `Monthly limit of ${limits.images} image analyses reached. Resets on your next billing date.` 
+      }, { status: 429 })
+    }
     
     if (!process.env.GEMINI_API_KEY) {
        throw new Error("GEMINI_API_KEY is missing")
@@ -69,14 +70,10 @@ export async function POST(request) {
     let contextText = ""
     let usedDocs = []
 
-    // RAG LOGIC (Only run text search if there is text input)
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
-      
-      // Generate Embedding for the user's question
       const embeddingResult = await embeddingModel.embedContent(lastUserMessage)
       const embedding = embeddingResult.embedding.values
 
-      // Search Supabase (The "Brain")
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
         match_threshold: 0.5,
@@ -87,7 +84,6 @@ export async function POST(request) {
         console.error('Vector Search Error:', searchError)
       }
 
-      // Build Context from matches
       if (documents && documents.length > 0) {
         contextText = documents.map(doc => {
           if (doc.metadata?.source && !usedDocs.includes(doc.metadata.source)) {
@@ -98,27 +94,25 @@ export async function POST(request) {
       }
     }
 
-    // Construct System Prompt
     const systemPrompt = `
-      You are "Protocol", the Washtenaw County Food Safety Assistant.
+      You are the compliance assistant for protocol LM, helping Washtenaw County restaurants maintain food safety compliance.
       
       INSTRUCTIONS:
-      1. You have access to the following retrieved context from the official regulations.
-      2. Answer the user's question strictly based on this context and general FDA/Michigan Food Code knowledge.
+      1. You have access to official FDA, Michigan, and Washtenaw County regulations.
+      2. Answer questions based on this context and general food safety knowledge.
       3. If the context contains the answer, CITE the source document name in **bold**.
       4. If the user uploads an image, analyze it for violations.
+      5. Never mention that you are an AI or language model. You are a compliance assistant.
       
       RETRIEVED CONTEXT:
-      ${contextText || "No specific document matches found. Rely on general Washtenaw County/FDA code knowledge."}
+      ${contextText || "No specific document matches found. Rely on general food safety knowledge."}
     `
 
-    // Build Conversation for Gemini
     let promptParts = [systemPrompt]
     
     messages.slice(0, -1).forEach(m => promptParts.push(`${m.role}: ${m.content}`))
     promptParts.push(`user: ${lastUserMessage}`)
     
-    // Handle Image (Vision)
     if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
@@ -132,22 +126,26 @@ export async function POST(request) {
       promptParts.push("Analyze this image for food safety violations.")
     }
 
-    // Generate Response
     const result = await chatModel.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
 
-    // ✅ INCREMENT REQUEST COUNTER
+    // Update counters
+    const updates = { 
+      requests_used: profile.requests_used + 1 
+    }
+    
+    if (image) {
+      updates.images_used = (profile.images_used || 0) + 1
+    }
+
     const { error: updateError } = await supabase
       .from('user_profiles')
-      .update({ 
-        requests_used: profile.requests_used + 1 
-      })
+      .update(updates)
       .eq('id', session.user.id)
 
     if (updateError) {
-      console.error('Failed to update request counter:', updateError)
-      // Don't fail the request, just log the error
+      console.error('Failed to update counters:', updateError)
     }
 
     return NextResponse.json({ message: text })
@@ -155,7 +153,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Gemini API Error:', error)
     return NextResponse.json({ 
-      error: `AI Error: ${error.message}` 
+      error: `Error: ${error.message}` 
     }, { status: 500 })
   }
 }
