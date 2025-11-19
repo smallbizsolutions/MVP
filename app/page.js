@@ -9,9 +9,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  
-  // Toggle between 'login' and 'signup'
-  const [view, setView] = useState('signup')
+  const [view, setView] = useState('signup') // 'login' or 'signup'
   
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -22,35 +20,35 @@ export default function Home() {
     setMessage(null)
 
     try {
+      // --- SIGN UP FLOW ---
       if (view === 'signup') {
-        // --- FLOW: SIGN UP -> PRICING ---
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // If email confirmation is disabled in Supabase, this logs them in immediately
-            data: {
-              is_subscribed: false // Default to false until they pay
-            }
+            // Redirect to pricing after email confirmation
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/pricing`,
           }
         })
 
         if (error) throw error
 
+        // Case A: Session exists immediately (Email confirmation OFF)
         if (data.session) {
-          // Success: Redirect immediately to Pricing to get them to pay
           router.push('/pricing')
-        } else {
-          // If Supabase requires email verification
+        } 
+        // Case B: No session yet (Email confirmation ON)
+        else {
           setMessage({ 
             type: 'success', 
-            text: 'Account created! Please check your email to confirm, then Log In.' 
+            text: 'Account created! Please check your email to confirm.' 
           })
-          setView('login')
+          // Optional: Switch to login view so they can login after clicking email
+          // setView('login') 
         }
-
-      } else {
-        // --- FLOW: LOG IN -> DASHBOARD (OR PRICING) ---
+      } 
+      // --- LOG IN FLOW ---
+      else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -58,23 +56,24 @@ export default function Home() {
 
         if (error) throw error
 
-        // Check if they actually have a subscription
+        // Check Subscription Status
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
           .eq('id', data.session.user.id)
           .single()
 
-        if (profile && profile.is_subscribed) {
+        if (profile?.is_subscribed) {
           router.push('/documents')
         } else {
-          // Logged in but hasn't paid? Send to pricing.
           router.push('/pricing')
         }
       }
     } catch (error) {
+      console.error("Auth Error:", error)
       setMessage({ type: 'error', text: error.message })
     } finally {
+      // CRITICAL FIX: This guarantees the button stops saying "Processing..."
       setLoading(false)
     }
   }
@@ -139,7 +138,7 @@ export default function Home() {
             disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
-            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account & View Plans' : 'Access Dashboard')}
+            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Access Dashboard')}
           </button>
 
           {message && (
