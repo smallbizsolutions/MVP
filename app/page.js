@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, File, Camera, Trash2 } from 'lucide-react';
+import { MessageSquare, Send, Shield, FileText, Info, Menu, X, AlertTriangle, Camera, Trash2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('chat'); 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [image, setImage] = useState(null); // Store base64 image
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,9 +14,8 @@ export default function App() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null); // Hidden file input
+  const fileInputRef = useRef(null);
 
-  // --- CHECK IF TERMS ACCEPTED ON LOAD ---
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
     if (accepted === 'true') {
@@ -26,7 +25,6 @@ export default function App() {
     }
   }, []);
 
-  // --- INITIAL LOAD ---
   useEffect(() => {
     fetch('/api/documents')
       .then(res => res.json())
@@ -34,7 +32,6 @@ export default function App() {
       .catch(err => console.error(err));
   }, []);
 
-  // --- CHAT LOGIC ---
   useEffect(() => { 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
   }, [messages]);
@@ -49,13 +46,12 @@ export default function App() {
     alert('You must accept the terms to use Protocol.');
   };
 
-  // Handle Image Selection
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result); // This creates a base64 string
+        setImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -64,18 +60,16 @@ export default function App() {
   const handleSendMessage = async () => {
     if ((!input.trim() && !image) || !termsAccepted) return;
 
-    // Create message object (optimistic update)
     const userMessage = { 
       role: 'user', 
       content: input, 
-      image: image // Store image for display
+      image: image
     };
 
     setMessages(prev => [...prev, userMessage]);
     const payloadInput = input;
     const payloadImage = image;
 
-    // Clear inputs immediately
     setInput('');
     setImage(null);
     setLoading(true);
@@ -86,7 +80,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: payloadInput,
-          image: payloadImage // Send the image data
+          image: payloadImage
         })
       });
       
@@ -118,7 +112,6 @@ export default function App() {
 
   return (
     <>
-      {/* --- TERMS MODAL --- */}
       {showTermsModal && (
         <div style={{
           position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.8)',
@@ -148,12 +141,10 @@ export default function App() {
       )}
 
       <div className="app-container">
-        {/* --- MOBILE OVERLAY --- */}
         {isMobileMenuOpen && (
           <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 20 }} onClick={() => setIsMobileMenuOpen(false)} />
         )}
 
-        {/* --- SIDEBAR --- */}
         <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #2a436b', paddingBottom: '15px' }}>
             <div style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -184,7 +175,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* --- MAIN CONTENT --- */}
         <div className="main-content">
           <div className="header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -208,20 +198,26 @@ export default function App() {
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`bubble ${msg.role === 'user' ? 'user' : 'bot'}`}>
-                    {/* Show User Image if exists */}
                     {msg.image && (
                       <img src={msg.image} alt="User upload" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '10px', display: 'block' }} />
                     )}
                     {formatMessage(msg.content)}
                   </div>
                 ))}
-                {loading && <div style={{ marginLeft: '20px', color: '#6b7280', fontStyle: 'italic', fontSize: '14px' }}>Analyzing...</div>}
+                {loading && (
+                  <div className="loading-container">
+                    <div className="kinetic-loader">
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                    </div>
+                    <span className="loading-text">Analyzing...</span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
               
-              {/* Input Area with Camera */}
               <div className="input-area">
-                {/* Hidden File Input */}
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -230,7 +226,6 @@ export default function App() {
                   style={{ display: 'none' }} 
                 />
                 
-                {/* Image Preview Badge */}
                 {image && (
                   <div style={{ position: 'absolute', bottom: '70px', left: '20px', backgroundColor: '#e0e7ff', padding: '5px 10px', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: '#0f2545', border: '1px solid #0f2545' }}>
                     <span>📸 Image attached</span>
@@ -311,6 +306,58 @@ export default function App() {
           .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
           .scroll-content { padding: 30px; background-color: #f9fafb; flex: 1; overflow-y: auto; }
           .mobile-only { display: none; }
+
+          /* KINETIC LOADER STYLES */
+          .loading-container {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background-color: #ffffff;
+            border-radius: 12px 12px 12px 0;
+            border: 1px solid #e5e7eb;
+          }
+
+          .kinetic-loader {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+          }
+
+          .kinetic-loader .dot {
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #5D4037 0%, #8D6E63 100%);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+          }
+
+          .kinetic-loader .dot:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+
+          .kinetic-loader .dot:nth-child(2) {
+            animation-delay: -0.16s;
+          }
+
+          @keyframes bounce {
+            0%, 80%, 100% {
+              transform: scale(0.8);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1.2);
+              opacity: 1;
+            }
+          }
+
+          .loading-text {
+            color: #6b7280;
+            font-size: 14px;
+            font-style: italic;
+          }
+
           @media (max-width: 768px) {
             .mobile-only { display: block; }
             .sidebar { position: absolute; top: 0; left: 0; bottom: 0; transform: translateX(-100%); }
