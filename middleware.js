@@ -10,7 +10,9 @@ export async function middleware(req) {
   } = await supabase.auth.getSession();
 
   // Allow access to auth and pricing pages
-  if (req.nextUrl.pathname.startsWith('/auth') || req.nextUrl.pathname.startsWith('/pricing')) {
+  if (req.nextUrl.pathname.startsWith('/auth') || 
+      req.nextUrl.pathname.startsWith('/pricing') ||
+      req.nextUrl.pathname.startsWith('/api')) {
     return res;
   }
 
@@ -19,7 +21,7 @@ export async function middleware(req) {
     return NextResponse.redirect(new URL('/auth', req.url));
   }
 
-  // Check trial status and subscription
+  // Check if user has active subscription
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('status, plan')
@@ -31,16 +33,22 @@ export async function middleware(req) {
     return res;
   }
 
-  // Check if trial has expired
-  const { data: userData } = await supabase.auth.admin.getUserById(session.user.id);
-  
-  if (userData?.user?.user_metadata?.trial_ends_at) {
-    const trialEnd = new Date(userData.user.user_metadata.trial_ends_at);
+  // Check trial status from user_profiles
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('trial_ends_at')
+    .eq('id', session.user.id)
+    .single();
+
+  if (profile?.trial_ends_at) {
+    const trialEnd = new Date(profile.trial_ends_at);
     const now = new Date();
     
     if (now > trialEnd) {
       // Trial expired, redirect to pricing
-      return NextResponse.redirect(new URL('/pricing?trial_expired=true', req.url));
+      if (!req.nextUrl.pathname.startsWith('/pricing')) {
+        return NextResponse.redirect(new URL('/pricing?trial_expired=true', req.url));
+      }
     }
   }
 
