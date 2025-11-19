@@ -17,10 +17,10 @@ export async function POST(request) {
 
   const { priceId } = await request.json()
   
-  // Map price IDs to plan names - $29 Pro, $49 Enterprise
+  // Map price IDs to plan names - $49 Pro, $99 Enterprise
   const planMap = {
-    'price_1SVG96DlSrKA3nbArP6hvWXr': 'pro',
-    'price_1SVG8KDlSrKA3nbAfEQje8j8': 'enterprise'
+    'price_1SVJvcDlSrKA3nbAlLcPCs52': 'pro',
+    'price_1SVJyRDlSrKA3nbAGhdEZzXA': 'enterprise'
   }
 
   const plan = planMap[priceId]
