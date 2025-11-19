@@ -14,39 +14,38 @@ export async function POST(request) {
   try {
     const { messages, image, docContext } = await request.json()
     
-    // 2. Initialize Gemini 1.5 Flash
+    // 2. Initialize Gemini
     if (!process.env.GEMINI_API_KEY) {
        throw new Error("GEMINI_API_KEY is missing in server variables")
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    
+    // FIX: Using 'gemini-1.5-flash-latest' to resolve the v1beta 404 error
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" })
 
     const lastUserMessage = messages[messages.length - 1].content
 
-    // 3. Strict System Prompt
+    // 3. Strict System Prompt (Washtenaw County Only)
     const systemPrompt = `
-      You are "Protocol", a Food Safety Compliance Assistant for Washtenaw County, MI.
+      You are "Protocol", the Washtenaw County Food Safety Assistant.
       
-      CONTEXT DOCUMENT: ${docContext || "General FDA Code"}
+      CONTEXT DOCUMENT: ${docContext || "General FDA/Michigan Food Code"}
       
-      INSTRUCTIONS:
-      1. Answer strictly based on Washtenaw County/FDA Food Code regulations.
-      2. If asked about non-food topics, politely refuse.
-      3. Cite the document name **${docContext}** in bold if relevant.
-      4. Be concise, professional, and inspector-like.
+      RULES:
+      1. Answer ONLY regarding food safety, health codes, and restaurant compliance.
+      2. If asked about anything else, refuse politely.
+      3. Reference the document **${docContext}** in bold when applicable.
+      4. Be concise and professional.
     `
 
     // 4. Build Prompt
     let promptParts = [systemPrompt]
     
-    // Add History
     messages.forEach(m => promptParts.push(`${m.role}: ${m.content}`))
-    
-    // Add Current Input
     promptParts.push(`user: ${lastUserMessage}`)
     
-    // Handle Image (if present)
+    // 5. Handle Image
     if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
@@ -60,7 +59,7 @@ export async function POST(request) {
       promptParts.push("Analyze this image for food safety violations based on Washtenaw County codes.")
     }
 
-    // 5. Generate Response
+    // 6. Generate Response
     const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
@@ -69,8 +68,6 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Gemini API Error:', error)
-    
-    // Return the REAL error to the frontend
     return NextResponse.json({ 
       error: `AI Error: ${error.message || "Unknown error"}` 
     }, { status: 500 })
