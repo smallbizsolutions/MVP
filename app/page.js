@@ -33,18 +33,15 @@ export default function Home() {
 
         // If session exists immediately (email confirmation disabled)
         if (data.session) {
-          // Create user profile
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: data.session.user.id,
-              email: data.session.user.email,
-              is_subscribed: false,
-              requests_used: 0
-            })
+          // Create user profile using the database function
+          const { error: profileError } = await supabase.rpc('create_user_profile', {
+            user_id: data.session.user.id,
+            user_email: data.session.user.email
+          })
 
-          if (profileError && profileError.code !== '23505') {
+          if (profileError) {
             console.error('Profile creation error:', profileError)
+            throw new Error('Failed to create user profile')
           }
 
           router.push('/pricing')
