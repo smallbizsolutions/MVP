@@ -1,31 +1,41 @@
 import { NextResponse } from "next/server";
 import { searchDocuments } from '../../../lib/searchDocs.js';
+import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
-// Simple in-memory rate limiter
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Request limits per plan
+const REQUEST_LIMITS = {
+  trial: 50,
+  pro: 500,
+  enterprise: -1 // unlimited
+};
+
+// Simple in-memory rate limiter (per IP, prevents abuse)
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute per IP
 
 function checkRateLimit(identifier) {
   const now = Date.now();
   const userRequests = rateLimitMap.get(identifier) || [];
   
-  // Filter out requests outside the current window
   const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
   
   if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    return false; // Rate limit exceeded
+    return false;
   }
   
-  // Add current request and update map
   recentRequests.push(now);
   rateLimitMap.set(identifier, recentRequests);
   
-  // Cleanup old entries periodically (prevent memory leak)
-  if (Math.random() < 0.01) { // 1% chance to cleanup
+  if (Math.random() < 0.01) {
     const cutoff = now - RATE_LIMIT_WINDOW;
     for (const [key, timestamps] of rateLimitMap.entries()) {
       const active = timestamps.filter(t => t > cutoff);
@@ -40,15 +50,54 @@ function checkRateLimit(identifier) {
   return true;
 }
 
+async function getUserPlanAndUsage(userId) {
+  // Check for active subscription
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('status, plan')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .single();
+  
+  // Get user profile for trial and usage tracking
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('trial_ends_at, requests_used')
+    .eq('id', userId)
+    .single();
+  
+  let plan = 'trial';
+  let requestsUsed = profile?.requests_used || 0;
+  
+  if (sub && sub.status === 'active') {
+    plan = sub.plan; // 'pro' or 'enterprise'
+  } else if (profile?.trial_ends_at) {
+    const trialEnd = new Date(profile.trial_ends_at);
+    const now = new Date();
+    if (now > trialEnd) {
+      plan = 'expired';
+    }
+  }
+  
+  return { plan, requestsUsed };
+}
+
+async function incrementRequestCount(userId) {
+  const { error } = await supabase.rpc('increment_requests', { user_id: userId });
+  if (error) {
+    console.error('Failed to increment request count:', error);
+  }
+}
+
 export async function POST(req) {
   try {
-    // Rate limiting - use IP address as identifier
+    // Rate limiting by IP
     const forwarded = req.headers.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(',')[0] : req.headers.get('x-real-ip') || 'unknown';
     
     if (!checkRateLimit(ip)) {
       return NextResponse.json({ 
-        error: "Rate limit exceeded. Please wait a moment before trying again." 
+        error: "Too many requests. Please wait a moment." 
       }, { status: 429 });
     }
 
@@ -57,36 +106,59 @@ export async function POST(req) {
       return NextResponse.json({ error: "API Key missing" }, { status: 500 });
     }
 
+    // Get user session from request
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify user with Supabase
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check user's plan and usage
+    const { plan, requestsUsed } = await getUserPlanAndUsage(user.id);
+    
+    // Enforce request limits
+    if (plan === 'expired') {
+      return NextResponse.json({ 
+        error: "Trial expired. Please upgrade to continue." 
+      }, { status: 429 });
+    }
+    
+    const limit = REQUEST_LIMITS[plan];
+    if (limit !== -1 && requestsUsed >= limit) {
+      return NextResponse.json({ 
+        error: "Request limit reached. Please upgrade your plan." 
+      }, { status: 429 });
+    }
+
     const { message, image } = await req.json();
 
     // 1. SEARCH FOR RELEVANT DOCUMENT CHUNKS
-    // Only retrieve the 5 most relevant chunks instead of loading all documents
     const query = message || "food safety inspection compliance";
     const relevantChunks = await searchDocuments(query, 5);
     
-    // Calculate confidence based on top match score and score consistency
     let confidence = null;
     if (relevantChunks && relevantChunks.length > 0) {
       const topScore = relevantChunks[0].score;
       const avgTopThree = relevantChunks.slice(0, Math.min(3, relevantChunks.length))
         .reduce((sum, chunk) => sum + chunk.score, 0) / Math.min(3, relevantChunks.length);
       
-      // Confidence factors:
-      // - High top score (>0.7 = very relevant)
-      // - Consistent scores among top results (indicates clear match)
       const scoreQuality = topScore;
-      const scoreConsistency = avgTopThree / topScore; // Closer to 1 = more consistent
+      const scoreConsistency = avgTopThree / topScore;
       
-      // Combined confidence (0-100%)
       confidence = Math.round(scoreQuality * scoreConsistency * 100);
       
-      // Only show confidence if we have good matches (>50%)
       if (confidence < 50) {
         confidence = null;
       }
     }
     
-    // Build context from only relevant chunks
     let contextData = "";
     if (relevantChunks && relevantChunks.length > 0) {
       contextData = relevantChunks
@@ -95,9 +167,8 @@ export async function POST(req) {
         )
         .join('\n\n');
       
-      console.log(`✅ Found ${relevantChunks.length} relevant chunks for query: "${query.substring(0, 50)}..." (confidence: ${confidence || 'low'}%)`);
+      console.log(`✅ Found ${relevantChunks.length} relevant chunks for user ${user.id}`);
     } else {
-      console.warn('⚠️  No relevant chunks found. Using fallback.');
       contextData = "No specific document matches found. Provide general food safety guidance based on standard FDA and local health department regulations.";
     }
 
@@ -125,11 +196,10 @@ ${contextData}
 
 USER ${image ? 'QUESTION' : 'MESSAGE'}: ${message || (image ? "Analyze this image for food safety compliance." : "Hello")}`;
 
-    // 3. CONSTRUCT PAYLOAD (With or Without Image)
+    // 3. CONSTRUCT PAYLOAD
     const parts = [{ text: systemInstruction }];
     
     if (image) {
-      // Remove the "data:image/jpeg;base64," prefix if present
       const base64Data = image.includes(',') ? image.split(",")[1] : image;
       parts.push({
         inline_data: {
@@ -139,12 +209,11 @@ USER ${image ? 'QUESTION' : 'MESSAGE'}: ${message || (image ? "Analyze this imag
       });
     }
 
-    // 4. API REQUEST WITH RETRY LOGIC (Gemini 2.5 Flash - Latest Stable Model)
+    // 4. API REQUEST WITH RETRY
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
     let response;
     let data;
-    let lastError;
     const maxRetries = 3;
     
     for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -166,10 +235,9 @@ USER ${image ? 'QUESTION' : 'MESSAGE'}: ${message || (image ? "Analyze this imag
         data = await response.json();
 
         if (response.ok) {
-          break; // Success, exit retry loop
+          break;
         }
         
-        // Check if it's a retryable error (503 Service Unavailable, 429 Too Many Requests, or overloaded)
         const errorMessage = data.error?.message || '';
         const isRetryable = response.status === 503 || 
                            response.status === 429 || 
@@ -180,13 +248,11 @@ USER ${image ? 'QUESTION' : 'MESSAGE'}: ${message || (image ? "Analyze this imag
           throw new Error(errorMessage || "Google API Error");
         }
         
-        // Exponential backoff: wait 1s, 2s, 4s
         const waitTime = Math.pow(2, attempt) * 1000;
         console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${waitTime}ms...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
         
       } catch (err) {
-        lastError = err;
         if (attempt === maxRetries - 1) {
           throw err;
         }
@@ -198,22 +264,23 @@ USER ${image ? 'QUESTION' : 'MESSAGE'}: ${message || (image ? "Analyze this imag
       throw new Error(data.error?.message || "Google API Error");
     }
 
-    // Extract response text
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
       throw new Error("No response text from API");
     }
 
+    // 5. INCREMENT REQUEST COUNT (only after successful response)
+    await incrementRequestCount(user.id);
+
     return NextResponse.json({ 
       response: text,
-      confidence: confidence // Include confidence in response
+      confidence: confidence
     });
 
   } catch (error) {
     console.error("Chat API Error:", error);
     
-    // Provide user-friendly error messages
     let userMessage = error.message;
     if (error.message.includes('overloaded') || error.message.includes('quota')) {
       userMessage = "The AI service is currently experiencing high demand. Please try again in a moment.";
