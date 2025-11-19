@@ -12,28 +12,46 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { messages, docContext } = await request.json()
+    const { messages, image } = await request.json()
     
-    // 2. Initialize Gemini
+    // 2. Initialize Gemini (Using 1.5 Flash as requested)
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
-    // 3. Construct the Prompt
-    // We combine the latest user question with the document context
-    const lastMessage = messages[messages.length - 1].content
-    
-    const prompt = `
-      You are a helpful food safety expert assistant for Washtenaw County restaurants.
+    const lastUserMessage = messages[messages.length - 1].content
+
+    // 3. Strict System Prompt
+    const systemPrompt = `
+      You are the "Protocol" Food Safety Assistant for Washtenaw County, MI.
       
-      Context: The user is looking at the document: "${docContext}".
-      
-      User Question: ${lastMessage}
-      
-      Please answer the question professionally based on general food safety knowledge and the context of the document title provided. Keep it concise and helpful.
+      CORE RULES:
+      1. You ONLY answer questions related to Food Safety, Health Codes, and Restaurant Compliance in Washtenaw County.
+      2. If a user asks about anything else (sports, weather, coding, general life), politely REFUSE. Say: "I can only assist with Washtenaw County food safety regulations."
+      3. If an image is provided, analyze it strictly for health code violations (e.g., cross-contamination, temperature issues, lack of labels, dirty surfaces).
+      4. Reference specific codes (FDA Food Code 2022 / Michigan Modified) when possible.
+      5. Keep answers professional, concise, and actionable.
     `
 
-    // 4. Generate Response
-    const result = await model.generateContent(prompt)
+    // 4. Construct Parts for Gemini
+    let promptParts = [systemPrompt, ...messages.map(m => `${m.role}: ${m.content}`), `user: ${lastUserMessage}`]
+    
+    // If image exists, add it to the prompt
+    if (image) {
+      // Image comes in as base64 data url: "data:image/jpeg;base64,..."
+      const base64Data = image.split(',')[1]
+      const mimeType = image.split(';')[0].split(':')[1]
+      
+      promptParts.push({
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      })
+      promptParts.push("Analyze this image for food safety violations based on Washtenaw County codes.")
+    }
+
+    // 5. Generate Response
+    const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
 
