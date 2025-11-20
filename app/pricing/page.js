@@ -24,7 +24,7 @@ export default function Pricing() {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
-      alert("Please sign in first to start your 7-day free trial.")
+      alert("Please sign in first to start your 30-day free trial.")
       router.push('/')
       setLoadingId(null)
       return
@@ -88,7 +88,7 @@ export default function Pricing() {
             Choose your plan
           </h1>
           <p className="text-xl text-slate-600 font-normal" style={{ letterSpacing: '-0.01em' }}>
-            Start with a 7-day free trial. Credit card required.
+            Start with a 30-day free trial. Credit card required.
           </p>
           {!isAuthenticated && (
             <div className="mt-8 p-5 bg-slate-50 border border-slate-200 rounded-xl">
@@ -118,7 +118,7 @@ export default function Pricing() {
               </div>
 
               <div className="mb-10 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <p className="text-sm font-semibold text-slate-800">Includes 7-day free trial</p>
+                <p className="text-sm font-semibold text-slate-800">Includes 30-day free trial</p>
               </div>
 
               <ul className="space-y-5 mb-10">
@@ -177,7 +177,7 @@ export default function Pricing() {
               </div>
 
               <div className="mb-10 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <p className="text-sm font-semibold text-slate-800">Includes 7-day free trial</p>
+                <p className="text-sm font-semibold text-slate-800">Includes 30-day free trial</p>
               </div>
 
               <ul className="space-y-5 mb-10">
@@ -238,7 +238,7 @@ export default function Pricing() {
           <div className="space-y-4">
             <details className="group">
               <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">How does the 7-day free trial work?</span>
+                <span className="font-semibold text-slate-900 text-base">How does the 30-day free trial work?</span>
                 <span className="text-slate-400 group-open:rotate-180 transition-transform">
                   <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -246,7 +246,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                You get full access to all features for 7 days. You'll need to provide a credit card, but you won't be charged until after the trial ends. Cancel anytime during the trial with no charge.
+                You get full access to all features for 30 days. You'll need to provide a credit card, but you won't be charged until after the trial ends. Cancel anytime during the trial with no charge.
               </div>
             </details>
 
@@ -302,7 +302,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                We offer a 7-day free trial so you can try before you commit. If you're not satisfied after your trial, simply cancel before being charged. Once charged, we don't offer refunds, but you can cancel at any time to prevent future charges.
+                We offer a 30-day free trial so you can try before you commit. If you're not satisfied after your trial, simply cancel before being charged. Once charged, we don't offer refunds, but you can cancel at any time to prevent future charges.
               </div>
             </details>
           </div>
