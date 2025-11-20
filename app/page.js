@@ -72,7 +72,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
         
         {/* Header - Compact spacing */}
-        <div className="relative z-10 px-8 pt-8 pb-4 lg:px-12">
+        <div className="relative z-10 px-8 pt-8 pb-6 lg:px-12">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
             <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
@@ -84,77 +84,78 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Content - Tighter spacing to fit on screen */}
-        <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-center pb-8">
-          <div className="relative max-w-xl pl-6">
+        {/* Content - Better centered with larger cards */}
+        <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-center py-8">
+          <div className="relative max-w-xl pl-6 mx-auto w-full">
             {/* Animated Line */}
             <div 
               className="absolute left-0 top-2 w-0.5 bg-gradient-to-b from-blue-500 via-green-400 to-transparent rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
-            <div className="space-y-2 lg:space-y-3">
+            <div className="space-y-4">
               
               {/* CARD 1: Warning */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm">Health inspections happen without warning</h3>
+                    <h3 className="text-white font-bold text-base mb-1">Health inspections happen without warning</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">Be ready at all times with instant compliance checks.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 2: Critical Violations */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-0.5">Critical violations cost you money</h3>
-                    <p className="text-slate-400 text-xs leading-tight">Re-inspections, closures, and lost revenue.</p>
+                    <h3 className="text-white font-bold text-base mb-1">Critical violations cost you money</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">Re-inspections, closures, and lost revenue add up fast.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 3: Catch Violations */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '600ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '600ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-0.5">Catch violations before inspectors do</h3>
-                    <p className="text-slate-400 text-xs leading-tight">AI analysis with exact regulatory citations.</p>
+                    <h3 className="text-white font-bold text-base mb-1">Catch violations before inspectors do</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">AI analysis with exact regulatory citations.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 4: Immediate Answers */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '800ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '800ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-0.5">Questions need immediate answers</h3>
-                    <p className="text-slate-400 text-xs leading-tight">Your team needs answers in seconds.</p>
+                    <h3 className="text-white font-bold text-base mb-1">Questions need immediate answers</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">Your team needs answers in seconds, not hours.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 5: One Tool */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '1000ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '1000ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-0.5">One tool. All your answers.</h3>
-                    <p className="text-slate-400 text-xs leading-tight">Food Code, county guidelines, and AI analysis.</p>
+                    <h3 className="text-white font-bold text-base mb-1">One tool. All your answers.</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">Food Code, county guidelines, and AI analysis.</p>
                   </div>
                 </div>
               </div>
