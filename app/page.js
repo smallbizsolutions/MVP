@@ -64,7 +64,6 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  // Now accepts specific colors for the icon and the border trace
   const TracingCard = ({ delay, borderColor, children }) => (
     <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-100">
       {/* The Content */}
@@ -72,7 +71,7 @@ export default function Home() {
         {children}
       </div>
 
-      {/* The Animated Border (SVG Overlay) - Uses the specific color passed in */}
+      {/* The Animated Border (SVG Overlay) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
         <rect 
           x="1" y="1" 
@@ -118,7 +117,8 @@ export default function Home() {
             {/* Line is Emerald */}
             <div className="h-1.5 w-full bg-[#059669] rounded-full opacity-30"></div>
           </div>
-          <div className={`text-xs text-emerald-800/60 font-medium mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* Darkened Subheader to Slate-900 (Almost Black) */}
+          <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - Soft Gradient matching the semantic flow */}
+            {/* Vertical Line Timeline - Semantic Gradient */}
             <div 
               className="absolute left-0 top-2 w-1 bg-gradient-to-b from-amber-400 via-rose-400 to-emerald-400 rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
@@ -160,15 +160,15 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 3 - EMERALD (Success/Prevention) */}
+              {/* CARD 3 - EMERALD (Success/Prevention/Image Analysis) */}
               <TracingCard delay="700ms" borderColor="#059669">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
                     <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-slate-900 font-bold text-base mb-1.5">Catch violations before inspectors do</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">AI analysis with exact regulatory citations.</p>
+                    <h3 className="text-slate-900 font-bold text-base mb-1.5">Verify compliance with a photo</h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">Snap a picture of equipment or prep areas. Our system checks it against County, State, and Federal regulations.</p>
                   </div>
                 </div>
               </TracingCard>
@@ -194,7 +194,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">One tool. All your answers.</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">Food Code, county guidelines, and AI analysis.</p>
+                    <p className="text-slate-600 text-sm leading-relaxed">FDA Food Code, Michigan guidelines, and intelligent reasoning.</p>
                   </div>
                 </div>
               </TracingCard>
