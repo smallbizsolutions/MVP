@@ -95,7 +95,7 @@ export default function Home() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
         
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-slate-950 tracking-tight">
+          <h1 className="text-4xl font-bold text-white tracking-tight">
             protocolLM
           </h1>
         </div>
