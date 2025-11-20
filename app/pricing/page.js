@@ -58,7 +58,7 @@ export default function Pricing() {
   }
 
   return (
-    // Using min-h-screen allows the page to grow and scroll on mobile
+    // Using min-h-screen: This GUARANTEES the page allows scrolling if content is taller than the screen.
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white">
