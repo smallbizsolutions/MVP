@@ -66,15 +66,8 @@ export default function Home() {
   return (
     <div className="h-screen w-full bg-white flex flex-col lg:flex-row overflow-hidden">
       
-      {/* LEFT SIDE - Animated gradient background with geometric shapes */}
-      <div className="w-full lg:w-1/2 animated-gradient flex flex-col relative h-screen overflow-hidden">
-        {/* Decorative geometric shapes */}
-        <div className="absolute inset-0 overflow-hidden opacity-20">
-          {/* Spearmint circles */}
-          <div className="absolute top-20 left-10 w-64 h-64 bg-[#86EFAC] rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-80 h-80 bg-[#FB923C] rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-[#FB7185] rounded-full blur-3xl"></div>
-        </div>
+      {/* LEFT SIDE - Solid matte background */}
+      <div className="w-full lg:w-1/2 bg-[#f0fdf4] flex flex-col relative h-screen overflow-hidden">
         
         {/* Header - Minimal spacing */}
         <div className="relative z-10 px-8 pt-5 pb-2 lg:px-12 shrink-0">
@@ -82,7 +75,7 @@ export default function Home() {
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
             </h1>
-            <div className="h-1 w-full bg-gradient-to-r from-[#86EFAC] via-[#FB923C] to-[#FB7185] rounded-full"></div>
+            <div className="h-1 w-full bg-[#86EFAC] rounded-full"></div>
           </div>
           <div className={`text-xs text-slate-600 font-medium mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
@@ -92,18 +85,18 @@ export default function Home() {
         {/* Content - Minimal gap, larger cards */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-center min-h-0 py-1">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Animated gradient line */}
+            {/* Solid line */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#86EFAC] via-[#FB923C] to-[#FB7185] rounded-full transition-all duration-[1500ms] ease-out shadow-lg"
+              className="absolute left-0 top-2 w-1 bg-[#86EFAC] rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
             <div className="space-y-3.5">
               
               {/* CARD 1 */}
-              <div className="card-reveal bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-5 shadow-lg" style={{ animationDelay: '0ms' }}>
+              <div className="card-reveal bg-white border border-slate-200 rounded-xl p-5 shadow-sm" style={{ animationDelay: '0ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-[#FB923C] to-[#FB923C]/70 flex items-center justify-center shadow-md">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
@@ -114,9 +107,9 @@ export default function Home() {
               </div>
 
               {/* CARD 2 */}
-              <div className="card-reveal bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-5 shadow-lg" style={{ animationDelay: '200ms' }}>
+              <div className="card-reveal bg-white border border-slate-200 rounded-xl p-5 shadow-sm" style={{ animationDelay: '200ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-[#FB7185] to-[#FB7185]/70 flex items-center justify-center shadow-md">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB7185] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -127,9 +120,9 @@ export default function Home() {
               </div>
 
               {/* CARD 3 */}
-              <div className="card-reveal bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-5 shadow-lg" style={{ animationDelay: '400ms' }}>
+              <div className="card-reveal bg-white border border-slate-200 rounded-xl p-5 shadow-sm" style={{ animationDelay: '400ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-[#86EFAC] to-[#86EFAC]/70 flex items-center justify-center shadow-md">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
                     <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
@@ -140,9 +133,9 @@ export default function Home() {
               </div>
 
               {/* CARD 4 */}
-              <div className="card-reveal bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-5 shadow-lg" style={{ animationDelay: '600ms' }}>
+              <div className="card-reveal bg-white border border-slate-200 rounded-xl p-5 shadow-sm" style={{ animationDelay: '600ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-[#FB923C] to-[#FB923C]/70 flex items-center justify-center shadow-md">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -153,9 +146,9 @@ export default function Home() {
               </div>
 
               {/* CARD 5 */}
-              <div className="card-reveal bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl p-5 shadow-lg" style={{ animationDelay: '800ms' }}>
+              <div className="card-reveal bg-white border border-slate-200 rounded-xl p-5 shadow-sm" style={{ animationDelay: '800ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-[#86EFAC] to-[#86EFAC]/70 flex items-center justify-center shadow-md">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
                     <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -183,7 +176,7 @@ export default function Home() {
           <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1 w-full bg-gradient-to-r from-[#86EFAC] via-[#FB923C] to-[#FB7185] rounded-full"></div>
+              <div className="h-1 w-full bg-[#86EFAC] rounded-full"></div>
             </div>
           </div>
 
@@ -210,7 +203,7 @@ export default function Home() {
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#86EFAC] focus:ring-4 focus:ring-[#86EFAC]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#86EFAC] to-[#4ADE80] hover:from-[#4ADE80] hover:to-[#22C55E] text-slate-900 font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-sm">
+            <button type="submit" disabled={loading} className="w-full bg-[#86EFAC] hover:bg-[#4ADE80] text-slate-900 font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
             {message && (
