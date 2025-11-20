@@ -42,62 +42,42 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* Loading Animation - Black & White */
-@keyframes moving {
-  0%, 5% {
-    left: 0;
-    background-color: #0f172a;
+/* Loading Animation - Simple Dots */
+@keyframes dot-flashing {
+  0% {
+    opacity: 0.2;
   }
-  95%, 100% {
-    left: calc(100% - 2rem);
-    background-color: #64748b;
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
   }
 }
 
-.loading-container {
+.loading-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  gap: 6px;
 }
 
-.box-loading {
-  position: relative;
-  width: 100%;
-  max-width: 200px;
-  height: 2rem;
-  background-color: #f1f5f9;
-  border-radius: 0.5rem;
-  overflow: hidden;
+.loading-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #64748b;
+  animation: dot-flashing 1.4s infinite;
 }
 
-.box-loading .box {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2rem;
-  height: 1rem;
-  background-color: #0f172a;
-  border-radius: 0.25rem;
-  animation: moving 1.5s ease-in-out infinite;
-}
-
-.box-loading .box:nth-child(1) {
+.loading-dots .dot:nth-child(1) {
   animation-delay: 0s;
 }
 
-.box-loading .box:nth-child(2) {
-  animation-delay: 0.15s;
+.loading-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-.box-loading .box:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.box-loading .box:nth-child(4) {
-  animation-delay: 0.45s;
-}
-
-.box-loading .box:nth-child(5) {
-  animation-delay: 0.6s;
+.loading-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
 }
