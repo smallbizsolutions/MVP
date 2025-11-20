@@ -41,53 +41,88 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* Stripe-style Card Reveal Animation */
-@keyframes border-draw {
+/* Matte Brand Colors - Spearmint, Creamsicle, Salmon */
+:root {
+  --color-spearmint: #86EFAC;
+  --color-creamsicle: #FB923C;
+  --color-salmon: #FB7185;
+  --color-spearmint-dark: #4ADE80;
+  --color-creamsicle-dark: #F97316;
+  --color-salmon-dark: #F43F5E;
+}
+
+/* Stripe-style Card Reveal Animation - Starts on load */
+@keyframes border-trace {
   0% {
-    stroke-dashoffset: 1000;
-    opacity: 0;
+    stroke-dashoffset: 800;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    opacity: 0.6;
   }
   50% {
     opacity: 1;
   }
-  100% {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
 }
 
-@keyframes fill-in {
+@keyframes content-fade-in {
   0% {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 .card-reveal {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
+/* SVG border trace effect */
 .card-reveal::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, var(--color-spearmint), var(--color-creamsicle), var(--color-salmon));
+  opacity: 0;
+  animation: border-glow 2s ease-in-out infinite;
+  animation-delay: 1.2s;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(8px);
+}
+
+.card-reveal::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 0.75rem;
   padding: 2px;
-  background: linear-gradient(135deg, #10b981, #f97316, #ec4899);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(135deg, var(--color-spearmint), var(--color-creamsicle), var(--color-salmon));
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0;
-  animation: border-draw 1s ease-out forwards;
+  animation: content-fade-in 0.4s ease-out 0.8s forwards;
+  pointer-events: none;
 }
 
 .card-reveal > div {
-  animation: fill-in 0.6s ease-out 0.3s both;
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  animation: content-fade-in 0.5s ease-out 1s forwards;
 }
 
 /* Custom Scrollbar Styles */
@@ -102,15 +137,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--color-spearmint);
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--color-spearmint-dark);
 }
 
-/* Loading Animation - Simple Dots */
+/* Loading Animation - Uses brand colors */
 @keyframes dot-flashing {
   0% {
     opacity: 0.2;
@@ -134,25 +169,36 @@ h1, h2, h3, h4, h5, h6 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #64748b;
   animation: dot-flashing 1.4s infinite;
 }
 
 .loading-dots .dot:nth-child(1) {
+  background-color: var(--color-spearmint);
   animation-delay: 0s;
 }
 
 .loading-dots .dot:nth-child(2) {
+  background-color: var(--color-creamsicle);
   animation-delay: 0.2s;
 }
 
 .loading-dots .dot:nth-child(3) {
+  background-color: var(--color-salmon);
   animation-delay: 0.4s;
 }
 
-/* Accent Colors - Spirit Green, Salmon Pink, Creamsicle Orange */
-:root {
-  --color-emerald: #10b981;
-  --color-pink: #ec4899;
-  --color-orange: #f97316;
+/* Animated gradient background */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(135deg, #f0fdf4, #fff7ed, #fff1f2);
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
 }
