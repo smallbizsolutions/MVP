@@ -63,9 +63,49 @@ export default function Home() {
     }
   }
 
+  // Helper component for the "Line Tracing" Card
+  const TracingCard = ({ color, iconColor, delay, children }) => (
+    <div className="relative bg-white rounded-xl p-5 shadow-sm group">
+      {/* The Content - Static, no ghost effect */}
+      <div className="relative z-10">
+        {children}
+      </div>
+
+      {/* The Animated Border (SVG Overlay) */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
+        <rect 
+          x="1" y="1" 
+          width="calc(100% - 2px)" 
+          height="calc(100% - 2px)" 
+          rx="11" 
+          fill="none" 
+          stroke={color} 
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="1000"
+          strokeDashoffset="1000"
+          className={`draw-border ${mounted ? 'animate-draw' : ''}`}
+          style={{ animationDelay: delay }}
+        />
+      </svg>
+    </div>
+  )
+
   return (
     <div className="h-screen w-full bg-white flex flex-col lg:flex-row overflow-hidden">
       
+      {/* CSS for the drawing animation */}
+      <style jsx global>{`
+        @keyframes drawBorder {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        .animate-draw {
+          animation: drawBorder 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+      `}</style>
+
       {/* LEFT SIDE */}
       <div className="w-full lg:w-1/2 bg-[#f0fdf4] flex flex-col relative h-screen overflow-hidden">
         
@@ -83,19 +123,19 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Content - Moved up using justify-start and padding-top (pt-12) instead of centering */}
+        {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Multicolored Vertical Line */}
+            {/* Multicolored Vertical Line (Timeline) */}
             <div 
               className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#FB923C] via-[#FB7185] to-[#86EFAC] rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               
-              {/* CARD 1 - Orange Border */}
-              <div className="card-reveal bg-white border-2 border-[#FB923C] rounded-xl p-5 shadow-sm" style={{ animationDelay: '0ms' }}>
+              {/* CARD 1 - Orange */}
+              <TracingCard color="#FB923C" delay="100ms">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -105,10 +145,10 @@ export default function Home() {
                     <p className="text-slate-600 text-sm leading-relaxed">Be ready at all times with instant compliance checks.</p>
                   </div>
                 </div>
-              </div>
+              </TracingCard>
 
-              {/* CARD 2 - Pink Border */}
-              <div className="card-reveal bg-white border-2 border-[#FB7185] rounded-xl p-5 shadow-sm" style={{ animationDelay: '200ms' }}>
+              {/* CARD 2 - Pink */}
+              <TracingCard color="#FB7185" delay="400ms">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB7185] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -118,10 +158,10 @@ export default function Home() {
                     <p className="text-slate-600 text-sm leading-relaxed">Re-inspections, closures, and lost revenue add up fast.</p>
                   </div>
                 </div>
-              </div>
+              </TracingCard>
 
-              {/* CARD 3 - Green Border */}
-              <div className="card-reveal bg-white border-2 border-[#86EFAC] rounded-xl p-5 shadow-sm" style={{ animationDelay: '400ms' }}>
+              {/* CARD 3 - Green */}
+              <TracingCard color="#86EFAC" delay="700ms">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
                     <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
@@ -131,10 +171,10 @@ export default function Home() {
                     <p className="text-slate-600 text-sm leading-relaxed">AI analysis with exact regulatory citations.</p>
                   </div>
                 </div>
-              </div>
+              </TracingCard>
 
-              {/* CARD 4 - Orange Border (Sequence repeats) */}
-              <div className="card-reveal bg-white border-2 border-[#FB923C] rounded-xl p-5 shadow-sm" style={{ animationDelay: '600ms' }}>
+              {/* CARD 4 - Orange */}
+              <TracingCard color="#FB923C" delay="1000ms">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -144,10 +184,10 @@ export default function Home() {
                     <p className="text-slate-600 text-sm leading-relaxed">Your team needs answers in seconds, not hours.</p>
                   </div>
                 </div>
-              </div>
+              </TracingCard>
 
-              {/* CARD 5 - Green Border (Matches Icon) */}
-              <div className="card-reveal bg-white border-2 border-[#86EFAC] rounded-xl p-5 shadow-sm" style={{ animationDelay: '800ms' }}>
+              {/* CARD 5 - Green */}
+              <TracingCard color="#86EFAC" delay="1300ms">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
                     <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -157,7 +197,7 @@ export default function Home() {
                     <p className="text-slate-600 text-sm leading-relaxed">Food Code, county guidelines, and AI analysis.</p>
                   </div>
                 </div>
-              </div>
+              </TracingCard>
 
             </div>
           </div>
@@ -201,12 +241,10 @@ export default function Home() {
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
-              {/* Email Focus: Orange */}
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#FB923C] focus:ring-4 focus:ring-[#FB923C]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-              {/* Password Focus: Pink */}
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#FB7185] focus:ring-4 focus:ring-[#FB7185]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
