@@ -246,7 +246,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                You get full access to all features for 30 days. You'll need to provide a credit card, but you won't be charged until after the trial ends. Cancel anytime during the trial with no charge.
+                You get full access to all features for 30 days. You&apos;ll need to provide a credit card, but you won&apos;t be charged until after the trial ends. Cancel anytime during the trial with no charge.
               </div>
             </details>
 
@@ -288,7 +288,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                You'll have access to FDA Food Code 2022, Michigan Modified Food Code, county-specific enforcement guidelines, cooling procedures, cross-contamination guides, and 10+ other essential compliance documents.
+                You&apos;ll have access to FDA Food Code 2022, Michigan Modified Food Code, county-specific enforcement guidelines, cooling procedures, cross-contamination guides, and 10+ other essential compliance documents.
               </div>
             </details>
 
@@ -302,7 +302,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                We offer a 30-day free trial so you can try before you commit. If you're not satisfied after your trial, simply cancel before being charged. Once charged, we don't offer refunds, but you can cancel at any time to prevent future charges.
+                We offer a 30-day free trial so you can try before you commit. If you&apos;re not satisfied after your trial, simply cancel before being charged. Once charged, we don&apos;t offer refunds, but you can cancel at any time to prevent future charges.
               </div>
             </details>
           </div>
