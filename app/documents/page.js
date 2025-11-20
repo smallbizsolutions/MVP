@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// County-specific document configurations - EXACTLY as uploaded to GitHub
+// County-specific document configurations
 const COUNTY_DOCUMENTS = {
   washtenaw: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
@@ -84,7 +84,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (userCounty) {
       setMessages([
-        { role: 'assistant', content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question about your local food safety regulations.` }
+        { 
+          role: 'assistant', 
+          content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question about your local food safety regulations. I'll cite specific documents and pages in my responses.`,
+          citations: []
+        }
       ])
     }
   }, [userCounty])
@@ -151,9 +155,12 @@ export default function Dashboard() {
       setUserCounty(newCounty)
       setShowCountySelector(false)
       
-      // Update welcome message with new county
       setMessages([
-        { role: 'assistant', content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_DOCUMENTS[newCounty].length} ${COUNTY_NAMES[newCounty]}-specific documents. Ask me anything about your local food safety regulations.` }
+        { 
+          role: 'assistant', 
+          content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_DOCUMENTS[newCounty].length} ${COUNTY_NAMES[newCounty]}-specific documents. Ask me anything about your local food safety regulations, and I'll cite specific sources and page numbers.`,
+          citations: []
+        }
       ])
     } catch (error) {
       console.error('Error updating county:', error)
@@ -161,11 +168,94 @@ export default function Dashboard() {
     }
   }
 
+  const handleCitationClick = (citation) => {
+    // Find the document in the current county's documents
+    const doc = COUNTY_DOCUMENTS[userCounty].find(d => 
+      d.title.toLowerCase().includes(citation.document.toLowerCase()) ||
+      citation.document.toLowerCase().includes(d.title.toLowerCase())
+    )
+    
+    if (doc) {
+      // Parse page number
+      const pageMatch = citation.pages.match(/\d+/)
+      const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
+      
+      // Open PDF at specific page
+      setViewingPdf({ ...doc, targetPage: pageNum })
+    } else {
+      alert(`Document "${citation.document}" not found in ${COUNTY_NAMES[userCounty]}`)
+    }
+  }
+
+  const renderMessageContent = (msg) => {
+    if (!msg.citations || msg.citations.length === 0) {
+      return msg.content
+    }
+
+    // Split content and make citations clickable
+    const parts = []
+    let lastIndex = 0
+    const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
+    let match
+
+    while ((match = citationRegex.exec(msg.content)) !== null) {
+      // Add text before citation
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: msg.content.slice(lastIndex, match.index)
+        })
+      }
+
+      // Add citation as clickable element
+      parts.push({
+        type: 'citation',
+        document: match[1],
+        pages: match[2],
+        fullMatch: match[0]
+      })
+
+      lastIndex = match.index + match[0].length
+    }
+
+    // Add remaining text
+    if (lastIndex < msg.content.length) {
+      parts.push({
+        type: 'text',
+        content: msg.content.slice(lastIndex)
+      })
+    }
+
+    return (
+      <>
+        {parts.map((part, idx) => {
+          if (part.type === 'text') {
+            return <span key={idx}>{part.content}</span>
+          } else {
+            return (
+              <button
+                key={idx}
+                onClick={() => handleCitationClick({ document: part.document, pages: part.pages })}
+                className="inline-flex items-center bg-slate-200 hover:bg-slate-300 text-slate-900 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
+                title={`Click to view ${part.document}, Page ${part.pages}`}
+              >
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {part.document}, Page {part.pages}
+              </button>
+            )
+          }
+        })}
+      </>
+    )
+  }
+
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim() && !image) return
 
-    const userMessage = { role: 'user', content: input, image: image }
+    const userMessage = { role: 'user', content: input, image: image, citations: [] }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setImage(null)
@@ -178,7 +268,7 @@ export default function Dashboard() {
         body: JSON.stringify({ 
           messages: [...messages, { role: 'user', content: input }], 
           image: userMessage.image,
-          county: userCounty // Pass current county to API
+          county: userCounty
         }),
       })
 
@@ -187,7 +277,8 @@ export default function Dashboard() {
       if (response.status === 403) {
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: '⚠️ ' + data.error + '\n\nPlease visit the pricing page to subscribe.' 
+          content: '⚠️ ' + data.error + '\n\nPlease visit the pricing page to subscribe.',
+          citations: []
         }])
         setTimeout(() => router.push('/pricing'), 3000)
         return
@@ -196,14 +287,19 @@ export default function Dashboard() {
       if (response.status === 429) {
         setMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: '⚠️ ' + data.error 
+          content: '⚠️ ' + data.error,
+          citations: []
         }])
         return
       }
 
       if (data.error) throw new Error(data.error)
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data.message,
+        citations: data.citations || []
+      }])
       
       if (subscriptionInfo) {
         setSubscriptionInfo(prev => ({
@@ -213,7 +309,11 @@ export default function Dashboard() {
         }))
       }
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }])
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `Error: ${error.message}`,
+        citations: []
+      }])
     } finally {
       setIsLoading(false)
     }
@@ -286,11 +386,14 @@ export default function Dashboard() {
           <div className="flex justify-between items-center p-5 bg-white border-b border-slate-200 shadow-sm">
             <div>
               <h3 className="text-base font-semibold text-slate-900">{viewingPdf.title}</h3>
-              <p className="text-xs text-slate-500 mt-1">{COUNTY_NAMES[userCounty]}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {COUNTY_NAMES[userCounty]}
+                {viewingPdf.targetPage && ` • Opening at Page ${viewingPdf.targetPage}`}
+              </p>
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => window.open(`/documents/${userCounty}/${viewingPdf.filename}`, '_blank')}
+                onClick={() => window.open(`/documents/${userCounty}/${viewingPdf.filename}#page=${viewingPdf.targetPage || 1}`, '_blank')}
                 className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-lg text-sm transition font-semibold"
               >
                 Open Full PDF
@@ -301,7 +404,7 @@ export default function Dashboard() {
           
           <div className="flex-1 w-full relative bg-slate-50 overflow-hidden">
             <iframe 
-              src={`/documents/${userCounty}/${viewingPdf.filename}#view=FitH`}
+              src={`/documents/${userCounty}/${viewingPdf.filename}#page=${viewingPdf.targetPage || 1}&view=FitH`}
               className="absolute inset-0 w-full h-full border-none" 
               title="Document Viewer"
             />
@@ -444,7 +547,7 @@ export default function Dashboard() {
         <div className="p-5 border-b border-slate-200 bg-white flex items-center justify-between shadow-sm mt-16 md:mt-0">
           <div>
             <h2 className="font-bold text-slate-900 text-base" style={{ letterSpacing: '-0.01em' }}>Compliance Assistant</h2>
-            <p className="text-xs text-slate-500 font-medium">Searching {COUNTY_NAMES[userCounty]} documents only</p>
+            <p className="text-xs text-slate-500 font-medium">Citing {COUNTY_NAMES[userCounty]} documents with page numbers</p>
           </div>
           <div className="flex items-center space-x-2">
             <button 
@@ -464,7 +567,7 @@ export default function Dashboard() {
               <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
                 {msg.image && <img src={msg.image} alt="Analysis Target" className="max-w-[250px] rounded-xl border border-slate-200 shadow-md" />}
                 <div className={`p-4 rounded-xl text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-900 border border-slate-200'}`}>
-                  {msg.content}
+                  {msg.role === 'assistant' ? renderMessageContent(msg) : msg.content}
                 </div>
               </div>
             </div>
