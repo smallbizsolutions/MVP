@@ -42,7 +42,6 @@ export default function Home() {
         if (error) throw error
 
         if (data.session) {
-          // User confirmed immediately (auto-confirm enabled)
           const { error: profileError } = await supabase
             .from('user_profiles')
             .update({ county: county })
@@ -96,51 +95,75 @@ export default function Home() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
         
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+          <h1 className="text-4xl font-bold text-white mb-2" style={{ letterSpacing: '-0.03em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <p className="text-blue-100 text-sm">Southeast Michigan Restaurant Compliance</p>
+          <p className="text-blue-100 text-base font-medium">Southeast Michigan Restaurant Compliance</p>
         </div>
         
-        <div className="space-y-6 relative z-10">
+        <div className="space-y-8 relative z-10">
           <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-white font-medium mb-1">Multi-County Coverage</h3>
-              <p className="text-blue-100 text-sm">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties</p>
+              <h3 className="text-white font-semibold mb-2 text-lg">Instant Compliance Answers</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">Get immediate answers to food safety questions using AI trained on FDA, Michigan, and county-specific regulations</p>
             </div>
           </div>
-          
+
           <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.2s' }}>
-            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
             <div>
-              <h3 className="text-white font-medium mb-1">Photo Analysis</h3>
-              <p className="text-blue-100 text-sm">Upload images to identify potential violations and get remediation guidance</p>
+              <h3 className="text-white font-semibold mb-2 text-lg">Multi-County Coverage</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties with one simple interface</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.3s' }}>
-            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-2 text-lg">Photo Violation Analysis</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">Upload images to identify potential violations and get instant remediation guidance</p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.4s' }}>
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <div>
-              <h3 className="text-white font-medium mb-1">Complete Reference Library</h3>
-              <p className="text-blue-100 text-sm">Access essential documents and enforcement guidelines for your county</p>
+              <h3 className="text-white font-semibold mb-2 text-lg">Complete Reference Library</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">Access FDA Food Code, Michigan regulations, and county enforcement guidelines all in one place</p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.5s' }}>
+            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-2 text-lg">Mobile-First Design</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">Access compliance tools on any device, optimized for use during kitchen inspections</p>
             </div>
           </div>
         </div>
         
-        <div className="text-blue-200 text-xs relative z-10">
+        <div className="text-blue-200 text-xs relative z-10 font-medium">
           © 2024 protocolLM. All rights reserved.
         </div>
       </div>
@@ -148,30 +171,30 @@ export default function Home() {
       {/* Right Side - Auth Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+          <div className="mb-10 lg:hidden">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.03em' }}>
               protocol<span className="font-black">LM</span>
             </h1>
-            <p className="text-slate-600 text-sm">Southeast Michigan Restaurant Compliance</p>
+            <p className="text-slate-600 text-base">Southeast Michigan Restaurant Compliance</p>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-2">
+          <div className="mb-10">
+            <h2 className="text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.03em' }}>
               {view === 'signup' ? 'Create your account' : 'Welcome back'}
             </h2>
-            <p className="text-slate-600">
+            <p className="text-slate-600 text-base">
               {view === 'signup' 
                 ? 'Start your 7-day free trial today' 
                 : 'Sign in to access your dashboard'}
             </p>
           </div>
 
-          <div className="flex rounded-lg bg-slate-100 p-1 mb-6">
+          <div className="flex rounded-xl bg-slate-100 p-1 mb-8">
             <button
               onClick={() => { setView('signup'); setMessage(null); }}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
                 view === 'signup' 
-                  ? 'bg-white text-slate-900 shadow-sm' 
+                  ? 'bg-white text-slate-900 shadow-md' 
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -179,9 +202,9 @@ export default function Home() {
             </button>
             <button
               onClick={() => { setView('login'); setMessage(null); }}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
                 view === 'login' 
-                  ? 'bg-white text-slate-900 shadow-sm' 
+                  ? 'bg-white text-slate-900 shadow-md' 
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -189,29 +212,29 @@ export default function Home() {
             </button>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-5">
             {view === 'signup' && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
                   Your County
                 </label>
                 <select
                   value={county}
                   onChange={(e) => setCounty(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition font-medium"
                 >
                   {COUNTIES.map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className="mt-2 text-xs text-slate-500">
                   Select where your restaurant operates. You can change this later.
                 </p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
                 Email address
               </label>
               <input
@@ -219,13 +242,13 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition"
                 placeholder="you@restaurant.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
                 Password
               </label>
               <input
@@ -234,7 +257,7 @@ export default function Home() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition"
                 placeholder="••••••••"
               />
             </div>
@@ -242,16 +265,16 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Processing...' : (view === 'signup' ? 'Create account' : 'Sign in')}
             </button>
 
             {message && (
-              <div className={`p-4 rounded-lg text-sm ${
+              <div className={`p-4 rounded-xl text-sm font-medium ${
                 message.type === 'error' 
-                  ? 'bg-red-50 border border-red-200 text-red-800' 
-                  : 'bg-green-50 border border-green-200 text-green-800'
+                  ? 'bg-red-50 border-2 border-red-200 text-red-800' 
+                  : 'bg-green-50 border-2 border-green-200 text-green-800'
               }`}>
                 {message.text}
               </div>
@@ -259,13 +282,13 @@ export default function Home() {
           </form>
 
           {view === 'signup' && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-center text-sm text-slate-600 mb-4">
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <p className="text-center text-sm text-slate-600 mb-4 font-medium">
                 7-day free trial • No credit card required
               </p>
               <button
                 onClick={() => router.push('/pricing')}
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium py-2.5 rounded-lg transition"
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-3 rounded-xl transition"
               >
                 View pricing plans
               </button>
