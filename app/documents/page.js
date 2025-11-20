@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// County-specific document configurations
+// County-specific document configurations - EXACTLY as uploaded to GitHub
 const COUNTY_DOCUMENTS = {
   washtenaw: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
@@ -24,17 +24,31 @@ const COUNTY_DOCUMENTS = {
     { title: 'Emergency Action Plan', filename: 'retail_food_establishments_emergency_action_plan.pdf' }
   ],
   wayne: [
+    { title: '3 Comp Sink', filename: '3comp_sink.pdf' },
+    { title: '5 Keys to Safer Food', filename: '5keys_to_safer_food.pdf' },
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
     { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-    { title: '3 Comp Sink Guide', filename: '3comp_sink.pdf' },
-    { title: '5 Keys to Safer Food', filename: '5keys_to_safer_food.pdf' },
+    { title: 'USDA Safe Minimum Temps', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
     { title: 'Calibrate Thermometer', filename: 'calibrate_thermometer.pdf' },
     { title: 'Clean & Sanitizing', filename: 'clean_sanitizing.pdf' },
     { title: 'Consumer Advisory 2012', filename: 'consumer_advisory-updated_2012.pdf' },
-    { title: 'Contamination Guide', filename: 'contamination.pdf' },
+    { title: 'Contamination', filename: 'contamination.pdf' },
     { title: 'Cooking Temps', filename: 'cook_temps.pdf' },
-    { title: 'Cooling Guide', filename: 'cooling.pdf' },
-    { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' }
+    { title: 'Cooling', filename: 'cooling.pdf' },
+    { title: 'Date Marking', filename: 'date_marking.pdf' },
+    { title: 'Employee Health Poster', filename: 'employeehealthposter.pdf' },
+    { title: 'Food Allergen Info', filename: 'foodallergeninformation.pdf' },
+    { title: 'General Norovirus Fact Sheet', filename: 'general_noro_fact_sheet.pdf' },
+    { title: 'Gloves USDA', filename: 'gloves_usda.pdf' },
+    { title: 'Guide for Wiping Cloths', filename: 'guideforuseofwipingcloths.doc' },
+    { title: 'Holding Temps', filename: 'hold_temps.pdf' },
+    { title: 'Non-Food Equipment', filename: 'nfsem_equip.pdf' },
+    { title: 'Non-Food Thawing', filename: 'nfsem_thaw.pdf' },
+    { title: 'Non-Food Trash', filename: 'nfsem_trash.pdf' },
+    { title: 'Norovirus for Food Handlers', filename: 'norovirus-foodhandlers.pdf' },
+    { title: 'Norovirus Cleaning Guidelines', filename: 'noroviruscleani nguidelines.pdf' },
+    { title: 'Raw Meat Storage', filename: 'raw_meat_storage.pdf' },
+    { title: 'Time as Public Health Control', filename: 'time_as_a_public_health_control.pdf' }
   ],
   oakland: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
@@ -354,7 +368,7 @@ export default function Dashboard() {
         
         <div className="flex-1 overflow-y-auto p-4 mt-16 md:mt-0">
           <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4 px-2">
-            {COUNTY_NAMES[userCounty]} Documents
+            {COUNTY_NAMES[userCounty]} Documents ({currentDocuments.length})
           </div>
           <div className="space-y-1">
             {currentDocuments.map((doc, idx) => (
@@ -367,7 +381,7 @@ export default function Dashboard() {
                     <svg className="w-4 h-4 mr-3 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <span className="truncate text-white group-hover:text-slate-50 font-medium">{doc.title}</span>
                  </div>
-                 <span className="text-xs text-slate-300 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">View</span>
+                 <span className="text-xs text-slate-300 ml-2 opacity-100 flex-shrink-0">View</span>
               </button>
             ))}
           </div>
