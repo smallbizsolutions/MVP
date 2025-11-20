@@ -15,7 +15,7 @@ dotenv.config({ path: '.env.local' });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for admin access
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const COUNTIES = ['washtenaw', 'wayne', 'oakland'];
@@ -33,7 +33,7 @@ async function uploadToSupabase() {
   let totalChunks = 0;
   let uploadedChunks = 0;
   
-  // First, clear existing documents (optional - comment out if you want to keep them)
+  // Clear existing documents
   console.log('🗑️  Clearing existing documents...');
   const { error: deleteError } = await supabase.from('documents').delete().neq('id', 0);
   if (deleteError) {
@@ -46,7 +46,6 @@ async function uploadToSupabase() {
   for (const county of COUNTIES) {
     const countyDir = path.join(documentsDir, county);
     
-    // Check if county directory exists
     if (!fs.existsSync(countyDir)) {
       console.log(`⚠️  Skipping ${county} - directory not found\n`);
       continue;
@@ -62,6 +61,7 @@ async function uploadToSupabase() {
       console.log(`📄 Processing: ${file}`);
       const filePath = path.join(countyDir, file);
       let text = '';
+      let pdfData = null;
       
       // Extract text
       try {
@@ -69,7 +69,7 @@ async function uploadToSupabase() {
           text = fs.readFileSync(filePath, 'utf-8');
         } else if (file.endsWith('.pdf')) {
           const dataBuffer = fs.readFileSync(filePath);
-          const pdfData = await pdf(dataBuffer);
+          pdfData = await pdf(dataBuffer);
           text = pdfData.text;
         }
       } catch (err) {
@@ -77,21 +77,64 @@ async function uploadToSupabase() {
         continue;
       }
       
-      // Split into chunks (500 words each)
-      const words = text.split(/\s+/);
+      // For PDFs, process page by page to maintain page numbers
       const fileChunks = [];
       
-      for (let i = 0; i < words.length; i += 500) {
-        const chunk = words.slice(i, i + 500).join(' ');
-        if (chunk.trim().length < 100) continue; // Skip tiny chunks
-        
-        fileChunks.push({
-          source: file,
-          county: county,
-          text: chunk.trim(),
-          chunkIndex: Math.floor(i / 500),
-          wordCount: Math.min(500, words.length - i)
-        });
+      if (file.endsWith('.pdf') && pdfData) {
+        // Process each page
+        for (let pageNum = 1; pageNum <= pdfData.numpages; pageNum++) {
+          try {
+            // Re-parse to get individual page
+            const dataBuffer = fs.readFileSync(filePath);
+            const pageData = await pdf(dataBuffer, {
+              pagerender: (pageData) => {
+                if (pageData.pageNumber === pageNum) {
+                  return pageData.getTextContent();
+                }
+              }
+            });
+            
+            // Get text for this page
+            const pageText = pageData.text.split('\n\n')[pageNum - 1] || '';
+            
+            if (pageText.trim().length < 50) continue; // Skip near-empty pages
+            
+            // Split long pages into chunks (500 words)
+            const words = pageText.split(/\s+/);
+            
+            for (let i = 0; i < words.length; i += 500) {
+              const chunk = words.slice(i, i + 500).join(' ');
+              if (chunk.trim().length < 100) continue;
+              
+              fileChunks.push({
+                source: file,
+                county: county,
+                text: chunk.trim(),
+                page: pageNum,
+                chunkIndex: Math.floor(i / 500),
+                wordCount: Math.min(500, words.length - i)
+              });
+            }
+          } catch (err) {
+            console.error(`   ⚠️  Failed to process page ${pageNum}:`, err.message);
+          }
+        }
+      } else {
+        // For text files, split into chunks without page numbers
+        const words = text.split(/\s+/);
+        for (let i = 0; i < words.length; i += 500) {
+          const chunk = words.slice(i, i + 500).join(' ');
+          if (chunk.trim().length < 100) continue;
+          
+          fileChunks.push({
+            source: file,
+            county: county,
+            text: chunk.trim(),
+            page: null,
+            chunkIndex: Math.floor(i / 500),
+            wordCount: Math.min(500, words.length - i)
+          });
+        }
       }
       
       console.log(`   📊 Created ${fileChunks.length} chunks`);
@@ -108,7 +151,7 @@ async function uploadToSupabase() {
           const result = await model.embedContent(chunk.text);
           const embedding = result.embedding.values;
           
-          // Upload to Supabase with county metadata
+          // Upload to Supabase with county and page metadata
           const { error: insertError } = await supabase
             .from('documents')
             .insert({
@@ -116,6 +159,7 @@ async function uploadToSupabase() {
               metadata: {
                 source: chunk.source,
                 county: chunk.county,
+                page: chunk.page,
                 chunk_index: chunk.chunkIndex,
                 word_count: chunk.wordCount
               },
@@ -133,7 +177,7 @@ async function uploadToSupabase() {
             console.log(`   ⏳ Progress: ${i + 1}/${fileChunks.length} chunks uploaded`);
           }
           
-          // Rate limiting - avoid API throttling
+          // Rate limiting
           await new Promise(r => setTimeout(r, 100));
         } catch (err) {
           console.error(`   ❌ Error on chunk ${i}:`, err.message);
@@ -149,7 +193,7 @@ async function uploadToSupabase() {
   console.log(`✅ Successfully uploaded: ${uploadedChunks}`);
   console.log(`❌ Failed: ${totalChunks - uploadedChunks}`);
   
-  // Verify upload with breakdown by county
+  // Verify upload
   console.log('\n📚 Database Summary:');
   for (const county of COUNTIES) {
     const { count, error: countError } = await supabase
