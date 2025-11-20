@@ -64,15 +64,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col lg:flex-row overflow-x-hidden">
+    <div className="h-screen w-full bg-white flex flex-col lg:flex-row overflow-hidden">
       
       {/* LEFT SIDE */}
-      <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col relative min-h-screen lg:min-h-0">
+      <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col relative h-screen overflow-y-auto">
         {/* Gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
         
-        {/* Header - Compact spacing */}
-        <div className="relative z-10 px-8 pt-8 pb-6 lg:px-12">
+        {/* Header - Very compact */}
+        <div className="relative z-10 px-8 pt-6 pb-3 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
             <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
@@ -84,8 +84,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Content - Better centered with larger cards */}
-        <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-center py-8">
+        {/* Content - Minimal spacing */}
+        <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-center py-4 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
             {/* Animated Line */}
             <div 
@@ -93,69 +93,69 @@ export default function Home() {
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               
               {/* CARD 1: Warning */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '200ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1">Health inspections happen without warning</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Be ready at all times with instant compliance checks.</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">Health inspections happen without warning</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Be ready at all times with instant compliance checks.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 2: Critical Violations */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '400ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-red-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1">Critical violations cost you money</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Re-inspections, closures, and lost revenue add up fast.</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">Critical violations cost you money</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Re-inspections, closures, and lost revenue add up fast.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 3: Catch Violations */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '600ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '600ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1">Catch violations before inspectors do</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">AI analysis with exact regulatory citations.</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">Catch violations before inspectors do</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">AI analysis with exact regulatory citations.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 4: Immediate Answers */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '800ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '800ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1">Questions need immediate answers</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Your team needs answers in seconds, not hours.</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">Questions need immediate answers</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Your team needs answers in seconds, not hours.</p>
                   </div>
                 </div>
               </div>
 
               {/* CARD 5: One Tool */}
-              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 lg:p-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '1000ms' }}>
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3.5 lg:p-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`} style={{ transitionDelay: '1000ms' }}>
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-base mb-1">One tool. All your answers.</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Food Code, county guidelines, and AI analysis.</p>
+                    <h3 className="text-white font-bold text-sm mb-0.5">One tool. All your answers.</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Food Code, county guidelines, and AI analysis.</p>
                   </div>
                 </div>
               </div>
@@ -165,24 +165,24 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className={`text-slate-500 text-xs relative z-10 px-8 lg:px-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-slate-500 text-xs relative z-10 px-8 lg:px-12 pb-4 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
 
       {/* RIGHT SIDE */}
-      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6">
-        <div className="w-full max-w-md py-8">
+      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 overflow-y-auto">
+        <div className="w-full max-w-md py-4">
           
           {/* Mobile Header */}
-          <div className="mb-6 lg:hidden">
+          <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
               <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
               {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
             </h2>
@@ -191,12 +191,12 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex rounded-xl bg-slate-100 p-1 mb-6">
+          <div className="flex rounded-xl bg-slate-100 p-1 mb-4">
             <button onClick={() => { setView('signup'); setMessage(null); }} className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${view === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Sign up</button>
             <button onClick={() => { setView('login'); setMessage(null); }} className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${view === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Sign in</button>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-3">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
@@ -216,8 +216,8 @@ export default function Home() {
           </form>
 
           {view === 'signup' && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-center text-xs text-slate-600 mb-3 font-medium">30-day free trial • From $49/month</p>
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
               <button onClick={() => router.push('/pricing')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-2.5 rounded-xl transition text-sm">View pricing plans</button>
             </div>
           )}
