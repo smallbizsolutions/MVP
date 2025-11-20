@@ -58,6 +58,7 @@ export default function Pricing() {
   }
 
   return (
+    // Using min-h-screen to ensure natural scrolling
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white">
