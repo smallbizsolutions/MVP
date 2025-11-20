@@ -10,9 +10,15 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [view, setView] = useState('signup')
+  const [mounted, setMounted] = useState(false)
   
   const router = useRouter()
   const supabase = createClientComponentClient()
+
+  // Trigger animations on mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleAuth = async (e) => {
     e.preventDefault()
@@ -71,91 +77,134 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-white flex overflow-hidden">
+    // Changed h-screen to min-h-screen to prevent cutoff on small screens
+    // Added items-stretch to ensure both sides define the height equally
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row items-stretch overflow-x-hidden">
+      
       {/* Left Side - Value Prop */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col relative overflow-hidden">
-        {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950"></div>
+      {/* Added pb-20 and justify-start to fix spacing issues. Removed 'hidden' to ensure it renders, but you can keep hidden lg:flex if you want it mobile hidden */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col relative shrink-0">
         
-        {/* Header */}
-        <div className="relative z-10 p-8">
-          <div className="inline-block">
+        {/* Background Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        
+        {/* Header - Adjusted spacing */}
+        <div className="relative z-10 px-12 pt-12 pb-6">
+          <div className={`inline-block transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
             </h1>
             <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
           </div>
-          <div className="text-xs text-slate-400 font-medium mt-2">
+          <div className={`text-xs text-slate-400 font-medium mt-2 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
           </div>
         </div>
         
-        {/* Content - Fixed height, no scrolling needed */}
-        <div className="relative z-10 flex-1 px-8 pb-8 flex flex-col justify-center">
-          <div className="space-y-4 max-w-xl">
-            {/* Main message card */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-              <p className="text-white text-xl font-bold leading-tight mb-2">
-                Health inspections happen without warning
-              </p>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Every restaurant in Michigan gets inspected 1-3 times per year. Most violations are preventable—but only if your staff knows exactly what inspectors are looking for.
-              </p>
-            </div>
+        {/* Content Container - Removed justify-center to fix the large gap */}
+        <div className="relative z-10 flex-1 px-12 flex flex-col justify-start pt-4">
+          <div className="relative max-w-xl pl-6">
+            
+            {/* Animated Line Trace - Stripe Style */}
+            <div 
+              className={`absolute left-0 top-2 w-0.5 bg-gradient-to-b from-blue-500 via-green-400 to-transparent rounded-full transition-all duration-[1500ms] ease-out`}
+              style={{ height: mounted ? '90%' : '0%' }}
+            ></div>
 
-            {/* Feature cards - Compact */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+            <div className="space-y-4">
+              
+              {/* CARD 1: The Warning (Formerly plain text) */}
+              <div className={`relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '200ms' }}>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    {/* Cone/Warning Icon */}
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-base mb-1">Health inspections happen without warning</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Every Michigan restaurant gets inspected 1-3 times per year. Most violations are preventable if your staff knows what to look for.
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Critical violations cost you money</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">Temperature violations, cross-contamination, improper storage—these mean re-inspections, potential closures, and lost revenue.</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  </svg>
+              {/* CARD 2: Critical Violations */}
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '400ms' }}>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm mb-1">Critical violations cost you money</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Temperature violations and cross-contamination mean re-inspections, potential closures, and lost revenue.</p>
+                  </div>
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Catch violations before inspectors do</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">Take a photo of your line, cooler, or storage area. Get instant feedback with exact regulatory citations.</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              {/* CARD 3: Catch Violations */}
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '600ms' }}>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm mb-1">Catch violations before inspectors do</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">Take a photo of your line, cooler, or storage area. Get instant feedback with exact regulatory citations.</p>
+                  </div>
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">Questions need immediate answers</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">&quot;Can I cool soup in the walk-in?&quot; &quot;What temp for chicken?&quot; Your team needs answers in seconds.</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              {/* CARD 4: Immediate Answers */}
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '800ms' }}>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm mb-1">Questions need immediate answers</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">&quot;Can I cool soup in the walk-in?&quot; &quot;What temp for chicken?&quot; Your team needs answers in seconds.</p>
+                  </div>
                 </div>
-                <h3 className="text-white font-bold text-sm mb-2">One tool. All your answers.</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">FDA Food Code, Michigan regulations, county guidelines, and AI image analysis—all accessible in seconds.</p>
               </div>
+
+              {/* CARD 5: One Tool */}
+              <div className={`bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '1000ms' }}>
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-sm mb-1">One tool. All your answers.</h3>
+                    <p className="text-slate-400 text-xs leading-relaxed">FDA Food Code, Michigan regulations, county guidelines, and AI image analysis—all accessible in seconds.</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
         
         {/* Footer */}
-        <div className="text-slate-500 text-xs relative z-10 px-8 pb-8 font-medium">
+        <div className={`text-slate-500 text-xs relative z-10 px-12 pb-8 font-medium transition-opacity duration-1000 delay-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
 
       {/* Right Side - Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white">
+      {/* Added flex-grow to ensure it takes available space but doesn't force white background underneath left side */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white relative">
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
             <div className="inline-block">
