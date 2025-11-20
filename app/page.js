@@ -64,14 +64,15 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  const TracingCard = ({ delay, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-emerald-100/50">
+  // Now accepts specific colors for the icon and the border trace
+  const TracingCard = ({ delay, borderColor, children }) => (
+    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-100">
       {/* The Content */}
       <div className="relative z-10">
         {children}
       </div>
 
-      {/* The Animated Border (SVG Overlay) - Emerald Color (#059669) */}
+      {/* The Animated Border (SVG Overlay) - Uses the specific color passed in */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
         <rect 
           x="1" y="1" 
@@ -79,7 +80,7 @@ export default function Home() {
           height="calc(100% - 2px)" 
           rx="11" 
           fill="none" 
-          stroke="#059669" 
+          stroke={borderColor} 
           strokeWidth="2"
           strokeLinecap="round"
           strokeDasharray="1200" 
@@ -105,13 +106,12 @@ export default function Home() {
         }
       `}</style>
 
-      {/* LEFT SIDE - Soft Emerald Background (bg-emerald-50) */}
+      {/* LEFT SIDE - Soft Emerald Background */}
       <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-emerald-50">
         
         {/* Header */}
         <div className="relative z-10 px-8 pt-6 pb-2 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            {/* Text is now Emerald to contrast with light background */}
             <h1 className="text-2xl lg:text-3xl font-bold text-[#059669] tracking-tight mb-1">
               protocol<span className="font-normal text-slate-700">LM</span>
             </h1>
@@ -126,19 +126,19 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - Soft Emerald Gradient */}
+            {/* Vertical Line Timeline - Soft Gradient matching the semantic flow */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#059669] to-emerald-200 rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-amber-400 via-rose-400 to-emerald-400 rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
             <div className="space-y-4">
               
-              {/* CARD 1 */}
-              <TracingCard delay="100ms">
+              {/* CARD 1 - AMBER (Warning) */}
+              <TracingCard delay="100ms" borderColor="#D97706">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-100/50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Health inspections happen without warning</h3>
@@ -147,11 +147,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 2 */}
-              <TracingCard delay="400ms">
+              {/* CARD 2 - ROSE (Critical Cost) */}
+              <TracingCard delay="400ms" borderColor="#E11D48">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-100/50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Critical violations cost you money</h3>
@@ -160,10 +160,10 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 3 */}
-              <TracingCard delay="700ms">
+              {/* CARD 3 - EMERALD (Success/Prevention) */}
+              <TracingCard delay="700ms" borderColor="#059669">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-100/50 flex items-center justify-center">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
                     <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
@@ -173,11 +173,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 4 */}
-              <TracingCard delay="1000ms">
+              {/* CARD 4 - BLUE (Time/Information) */}
+              <TracingCard delay="1000ms" borderColor="#2563EB">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-100/50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Questions need immediate answers</h3>
@@ -186,11 +186,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 5 */}
-              <TracingCard delay="1300ms">
+              {/* CARD 5 - INDIGO (All-in-One Tool) */}
+              <TracingCard delay="1300ms" borderColor="#4F46E5">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-100/50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">One tool. All your answers.</h3>
@@ -209,7 +209,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* RIGHT SIDE - Content pushed up (pt-12 lg:pt-32) */}
+      {/* RIGHT SIDE */}
       <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start lg:pt-32 p-6 h-screen overflow-hidden">
         <div className="w-full max-w-md mx-auto">
           
@@ -230,7 +230,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle - Active state has LIGHT EMERALD fill */}
+          {/* Toggle */}
           <div className="bg-slate-100 p-1 rounded-xl mb-5">
             <div className="flex rounded-[10px] overflow-hidden">
               <button 
@@ -266,7 +266,7 @@ export default function Home() {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Main Action Button - Solid Emerald */}
+            {/* Main Action Button - Emerald */}
             <button type="submit" disabled={loading} className="w-full bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
@@ -281,7 +281,6 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
-              {/* View Pricing Button - White inside, Emerald border */}
               <button onClick={() => router.push('/pricing')} className="w-full bg-white border-2 border-[#059669] text-[#059669] hover:bg-emerald-50 font-bold py-2.5 rounded-xl transition text-sm">View pricing plans</button>
             </div>
           )}
