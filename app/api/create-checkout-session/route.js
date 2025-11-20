@@ -40,7 +40,7 @@ export async function POST(request) {
       success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
       subscription_data: { 
-        trial_period_days: 7,
+        trial_period_days: 30, // ✅ UPDATED TO 30 DAYS
         metadata: {
           userId: session.user.id,
           plan: plan
