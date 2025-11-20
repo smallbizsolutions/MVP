@@ -95,10 +95,9 @@ export default function Home() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
         
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-2" style={{ letterSpacing: '-0.03em' }}>
-            protocol<span className="font-black">LM</span>
+          <h1 className="text-4xl font-bold text-slate-950 tracking-tight">
+            protocolLM
           </h1>
-          <p className="text-slate-300 text-base font-medium">Southeast Michigan Restaurant Compliance</p>
         </div>
         
         <div className="space-y-8 relative z-10">
@@ -172,10 +171,9 @@ export default function Home() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.03em' }}>
-              protocol<span className="font-black">LM</span>
+            <h1 className="text-3xl font-bold text-slate-950 tracking-tight">
+              protocolLM
             </h1>
-            <p className="text-slate-600 text-base">Southeast Michigan Restaurant Compliance</p>
           </div>
 
           <div className="mb-10">
