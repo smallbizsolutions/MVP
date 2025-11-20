@@ -20,9 +20,9 @@ export default function Pricing() {
 
   const handleCheckout = async (priceId, planName) => {
     setLoadingId(priceId)
-
+    
     const { data: { session } } = await supabase.auth.getSession()
-
+    
     if (!session) {
       alert("Please sign in first to start your 30-day free trial.")
       router.push('/')
@@ -58,6 +58,7 @@ export default function Pricing() {
   }
 
   return (
+    // Use min-h-screen to allow scrolling if content is taller than screen
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white">
@@ -98,7 +99,7 @@ export default function Pricing() {
             </div>
           )}
         </div>
-        
+
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
@@ -107,7 +108,6 @@ export default function Pricing() {
             <div className="absolute top-0 right-0 bg-slate-900 text-white text-xs font-bold tracking-wide px-5 py-2 rounded-bl-xl">
               MOST POPULAR
             </div>
-
             <div className="p-10">
               <h2 className="text-3xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.02em' }}>Pro</h2>
               <p className="text-slate-600 text-base mb-8" style={{ letterSpacing: '-0.01em' }}>Perfect for single locations</p>
@@ -161,18 +161,17 @@ export default function Pricing() {
               >
                 {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
-              <p className="text-center text-xs text-slate-500 mt-4 font-medium">Then $49/month. Cancel anytime.</p>
             </div>
           </div>
 
           {/* Enterprise Plan */}
-          <div className="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden hover:border-slate-400 transition-all duration-200 hover:shadow-xl">
+          <div className="relative bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
             <div className="p-10">
               <h2 className="text-3xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
-              <p className="text-slate-600 text-base mb-8" style={{ letterSpacing: '-0.01em' }}>For restaurant groups with multiple locations</p>
+              <p className="text-slate-600 text-base mb-8" style={{ letterSpacing: '-0.01em' }}>For restaurant groups & chains</p>
               
               <div className="flex items-baseline mb-8">
-                <span className="text-6xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$99</span>
+                <span className="text-6xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$199</span>
                 <span className="ml-3 text-slate-600 font-medium">/month</span>
               </div>
 
@@ -182,141 +181,47 @@ export default function Pricing() {
 
               <ul className="space-y-5 mb-10">
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">5,000 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">500 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-slate-700">Multi-location dashboard</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-slate-700">Team management (5 seats)</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-slate-700">API access</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Dedicated account manager</span>
                 </li>
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-slate-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700">Custom document integration</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-5 h-5 text-slate-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-700">API Access</span>
+                </li>
               </ul>
 
               <button 
-                onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
+                onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPEnterprise', 'Enterprise')} 
                 disabled={loadingId !== null}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-semibold py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
+                {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPEnterprise' ? 'Processing...' : 'Start free trial'}
               </button>
-              <p className="text-center text-xs text-slate-500 mt-4 font-medium">Then $99/month. Cancel anytime.</p>
             </div>
           </div>
-
-        </div>
-        
-        {/* FAQ Section */}
-        <div className="mt-24 max-w-3xl mx-auto">
-          <h3 className="text-3xl font-bold text-slate-900 text-center mb-12" style={{ letterSpacing: '-0.03em' }}>Frequently asked questions</h3>
-          <div className="space-y-4">
-            <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">How does the 30-day free trial work?</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="p-5 text-slate-600 leading-relaxed">
-                You get full access to all features for 30 days. You&apos;ll need to provide a credit card, but you won&apos;t be charged until after the trial ends. Cancel anytime during the trial with no charge.
-              </div>
-            </details>
-
-            <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">Can I cancel my subscription?</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="p-5 text-slate-600 leading-relaxed">
-                Yes. You can cancel anytime. Your access continues until the end of your billing period.
-              </div>
-            </details>
-
-            <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">What happens when I reach my monthly limits?</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="p-5 text-slate-600 leading-relaxed">
-                Your limits reset monthly. Pro includes 500 queries and 50 image analyses per month. Enterprise includes 5,000 queries and 500 image analyses. If you need more, upgrade to Enterprise or contact us for a custom plan.
-              </div>
-            </details>
-
-            <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">Which regulations are included?</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="p-5 text-slate-600 leading-relaxed">
-                You&apos;ll have access to FDA Food Code 2022, Michigan Modified Food Code, county-specific enforcement guidelines, cooling procedures, cross-contamination guides, and 10+ other essential compliance documents.
-              </div>
-            </details>
-
-            <details className="group">
-              <summary className="flex justify-between items-center cursor-pointer list-none p-5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                <span className="font-semibold text-slate-900 text-base">Do you offer refunds?</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="p-5 text-slate-600 leading-relaxed">
-                We offer a 30-day free trial so you can try before you commit. If you&apos;re not satisfied after your trial, simply cancel before being charged. Once charged, we don&apos;t offer refunds, but you can cancel at any time to prevent future charges.
-              </div>
-            </details>
-          </div>
-        </div>
-
-        {/* Footer CTA */}
-        <div className="mt-20 text-center">
-          <p className="text-slate-600 mb-4 text-base">Still have questions?</p>
-          <a 
-            href="mailto:support@protocollm.com" 
-            className="text-slate-900 hover:text-slate-700 font-semibold text-base underline decoration-2 underline-offset-4"
-          >
-            Contact our support team
-          </a>
+          
         </div>
       </div>
     </div>
