@@ -64,7 +64,8 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  // Increased Dasharray to 3000 to ensure it fills completely without stopping short
+  // Reverted to a smaller dasharray (1200) so the speed is consistent and slow
+  // but still large enough to close the loop on these card sizes.
   const TracingCard = ({ color, delay, children }) => (
     <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-sm group">
       {/* The Content */}
@@ -83,8 +84,8 @@ export default function Home() {
           stroke={color} 
           strokeWidth="2"
           strokeLinecap="round"
-          strokeDasharray="3000" 
-          strokeDashoffset="3000"
+          strokeDasharray="1200" 
+          strokeDashoffset="1200"
           className={`draw-border ${mounted ? 'animate-draw' : ''}`}
           style={{ animationDelay: delay }}
         />
@@ -95,7 +96,7 @@ export default function Home() {
   return (
     <div className="h-screen w-full bg-white flex flex-col lg:flex-row overflow-hidden">
       
-      {/* CSS for the drawing animation */}
+      {/* CSS for the drawing animation - Slowed down to 3s for smoothness */}
       <style jsx global>{`
         @keyframes drawBorder {
           to {
@@ -103,21 +104,21 @@ export default function Home() {
           }
         }
         .animate-draw {
-          animation: drawBorder 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          animation: drawBorder 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
       `}</style>
 
       {/* LEFT SIDE */}
       <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-white">
         
-        {/* Soft Background Texture (Blurred Blobs) */}
+        {/* Soft Background Texture (Blurred Blobs) - Darkened by ~5% */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Orange Blob Top Left */}
-          <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#FB923C]/10 blur-[100px]" />
-          {/* Pink Blob Middle Right */}
-          <div className="absolute top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#FB7185]/10 blur-[120px]" />
-          {/* Green Blob Bottom */}
-          <div className="absolute -bottom-[20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[#86EFAC]/20 blur-[100px]" />
+          {/* Orange Blob Top Left (15% opacity) */}
+          <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#FB923C]/15 blur-[100px]" />
+          {/* Pink Blob Middle Right (15% opacity) */}
+          <div className="absolute top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#FB7185]/15 blur-[120px]" />
+          {/* Green Blob Bottom (25% opacity) */}
+          <div className="absolute -bottom-[20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[#86EFAC]/25 blur-[100px]" />
         </div>
 
         {/* Header */}
@@ -277,8 +278,8 @@ export default function Home() {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#FB7185] focus:ring-4 focus:ring-[#FB7185]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Multicolored Button */}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#FB923C] via-[#FB7185] to-[#86EFAC] hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
+            {/* Multicolored Button - Now Matte Gradient to match Toggle */}
+            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 hover:opacity-80 text-slate-900 font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
