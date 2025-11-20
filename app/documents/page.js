@@ -26,13 +26,19 @@ const COUNTY_DOCUMENTS = {
   wayne: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
     { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-    { title: 'Wayne County Health Code', filename: 'Wayne_County_Health_Code.pdf' },
-    { title: 'Detroit Health Guidelines', filename: 'Detroit_Health_Guidelines.pdf' },
+    { title: '3 Comp Sink Guide', filename: '3comp_sink.pdf' },
+    { title: '5 Keys to Safer Food', filename: '5keys_to_safer_food.pdf' },
+    { title: 'Calibrate Thermometer', filename: 'calibrate_thermometer.pdf' },
+    { title: 'Clean & Sanitizing', filename: 'clean_sanitizing.pdf' },
+    { title: 'Consumer Advisory 2012', filename: 'consumer_advisory-updated_2012.pdf' },
+    { title: 'Contamination Guide', filename: 'contamination.pdf' },
+    { title: 'Cooking Temps', filename: 'cook_temps.pdf' },
+    { title: 'Cooling Guide', filename: 'cooling.pdf' },
+    { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' }
   ],
   oakland: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-    { title: 'Oakland County Regulations', filename: 'Oakland_County_Regulations.pdf' },
+    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' }
   ]
 }
 
