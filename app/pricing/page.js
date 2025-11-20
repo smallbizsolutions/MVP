@@ -70,7 +70,7 @@ export default function Pricing() {
               <span className="text-slate-900 font-bold tracking-tight text-lg">
                 protocol<span className="font-normal">LM</span>
               </span>
-              <div className="h-0.5 w-full bg-gradient-to-r from-[#86EFAC] via-[#FB923C] to-[#FB7185] rounded-full mt-0.5"></div>
+              <div className="h-0.5 w-full bg-[#86EFAC] rounded-full mt-0.5"></div>
             </div>
           </button>
           {!isAuthenticated && (
@@ -94,7 +94,7 @@ export default function Pricing() {
             Start with a 30-day free trial. Credit card required.
           </p>
           {!isAuthenticated && (
-            <div className="mt-6 p-4 bg-gradient-to-r from-[#86EFAC]/10 via-[#FB923C]/10 to-[#FB7185]/10 border border-[#86EFAC]/30 rounded-xl">
+            <div className="mt-6 p-4 bg-[#f0fdf4] border border-[#86EFAC] rounded-xl">
               <p className="text-sm text-slate-700 leading-relaxed">
                 <span className="font-semibold">New here?</span> Create an account first, then select your plan to start your free trial.
               </p>
@@ -106,8 +106,8 @@ export default function Pricing() {
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           
           {/* Pro Plan */}
-          <div className="relative bg-white rounded-2xl border-2 border-[#86EFAC] shadow-2xl overflow-hidden hover:shadow-3xl transition-shadow duration-300">
-            <div className="absolute top-0 right-0 bg-gradient-to-r from-[#86EFAC] to-[#4ADE80] text-slate-900 text-xs font-bold tracking-wide px-4 py-1.5 rounded-bl-xl">
+          <div className="relative bg-white rounded-2xl border-2 border-[#86EFAC] shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div className="absolute top-0 right-0 bg-[#86EFAC] text-slate-900 text-xs font-bold tracking-wide px-4 py-1.5 rounded-bl-xl">
               MOST POPULAR
             </div>
             <div className="p-8">
@@ -119,7 +119,7 @@ export default function Pricing() {
                 <span className="ml-2 text-slate-600 font-medium">/month</span>
               </div>
 
-              <div className="mb-6 p-3 bg-gradient-to-r from-[#86EFAC]/10 to-[#4ADE80]/10 rounded-xl border border-[#86EFAC]/30">
+              <div className="mb-6 p-3 bg-[#f0fdf4] rounded-xl border border-[#86EFAC]">
                 <p className="text-xs font-semibold text-slate-800">Includes 30-day free trial</p>
               </div>
 
@@ -159,7 +159,7 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
                 disabled={loadingId !== null}
-                className="w-full bg-gradient-to-r from-[#86EFAC] to-[#4ADE80] hover:from-[#4ADE80] hover:to-[#22C55E] text-slate-900 font-semibold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full bg-[#86EFAC] hover:bg-[#4ADE80] text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
@@ -167,7 +167,7 @@ export default function Pricing() {
           </div>
 
           {/* Enterprise Plan */}
-          <div className="relative bg-white rounded-2xl border-2 border-slate-200 shadow-lg overflow-hidden hover:shadow-xl hover:border-[#FB923C]/50 transition-all duration-300">
+          <div className="relative bg-white rounded-2xl border-2 border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-[#FB923C] transition-all duration-300">
             <div className="p-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
               <p className="text-slate-600 text-sm mb-6" style={{ letterSpacing: '-0.01em' }}>For restaurant groups & chains</p>
@@ -217,7 +217,7 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
-                className="w-full bg-white border-2 border-[#FB923C] hover:bg-gradient-to-r hover:from-[#FB923C]/10 hover:to-[#FB7185]/10 text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full bg-white border-2 border-[#FB923C] hover:bg-[#fff7ed] text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
               </button>
