@@ -70,7 +70,8 @@ export default function Pricing() {
               <span className="text-slate-900 font-bold tracking-tight text-lg">
                 protocol<span className="font-normal">LM</span>
               </span>
-              <div className="h-0.5 w-full bg-[#86EFAC] rounded-full mt-0.5"></div>
+              {/* Underline - Darker Green */}
+              <div className="h-0.5 w-full bg-[#16A34A] rounded-full mt-0.5"></div>
             </div>
           </button>
           {!isAuthenticated && (
@@ -94,7 +95,7 @@ export default function Pricing() {
             Start with a 30-day free trial. Credit card required.
           </p>
           {!isAuthenticated && (
-            <div className="mt-6 p-4 bg-[#f0fdf4] border border-[#86EFAC] rounded-xl">
+            <div className="mt-6 p-4 bg-[#f0fdf4] border border-[#16A34A] rounded-xl">
               <p className="text-sm text-slate-700 leading-relaxed">
                 <span className="font-semibold">New here?</span> Create an account first, then select your plan to start your free trial.
               </p>
@@ -105,9 +106,9 @@ export default function Pricing() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           
-          {/* Pro Plan */}
-          <div className="relative bg-white rounded-2xl border-2 border-[#86EFAC] shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="absolute top-0 right-0 bg-[#86EFAC] text-slate-900 text-xs font-bold tracking-wide px-4 py-1.5 rounded-bl-xl">
+          {/* Pro Plan - Darker Green (#16A34A) */}
+          <div className="relative bg-white rounded-2xl border-2 border-[#16A34A] shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div className="absolute top-0 right-0 bg-[#16A34A] text-white text-xs font-bold tracking-wide px-4 py-1.5 rounded-bl-xl">
               MOST POPULAR
             </div>
             <div className="p-8">
@@ -119,37 +120,37 @@ export default function Pricing() {
                 <span className="ml-2 text-slate-600 font-medium">/month</span>
               </div>
 
-              <div className="mb-6 p-3 bg-[#f0fdf4] rounded-xl border border-[#86EFAC]">
+              <div className="mb-6 p-3 bg-[#f0fdf4] rounded-xl border border-[#16A34A]">
                 <p className="text-xs font-semibold text-slate-800">Includes 30-day free trial</p>
               </div>
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#86EFAC] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#16A34A] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">500 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#86EFAC] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#16A34A] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">50 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#86EFAC] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#16A34A] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Unlimited document access</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#86EFAC] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#16A34A] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Mobile optimized</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#86EFAC] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#16A34A] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Priority email support</span>
@@ -159,15 +160,15 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
                 disabled={loadingId !== null}
-                className="w-full bg-[#86EFAC] hover:bg-[#4ADE80] text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
             </div>
           </div>
 
-          {/* Enterprise Plan */}
-          <div className="relative bg-white rounded-2xl border-2 border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-[#FB923C] transition-all duration-300">
+          {/* Enterprise Plan - Darker Orange (#EA580C) */}
+          <div className="relative bg-white rounded-2xl border-2 border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-[#EA580C] transition-all duration-300">
             <div className="p-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
               <p className="text-slate-600 text-sm mb-6" style={{ letterSpacing: '-0.01em' }}>For restaurant groups & chains</p>
@@ -183,31 +184,31 @@ export default function Pricing() {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#FB923C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#EA580C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">5,000 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#FB923C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#EA580C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">500 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#FB923C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#EA580C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Dedicated account manager</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#FB923C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#EA580C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Custom document integration</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#FB923C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[#EA580C] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">API Access</span>
@@ -217,7 +218,7 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
-                className="w-full bg-white border-2 border-[#FB923C] hover:bg-[#fff7ed] text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full bg-white border-2 border-[#EA580C] text-[#EA580C] hover:bg-orange-50 font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
               </button>
