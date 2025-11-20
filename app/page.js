@@ -89,7 +89,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 to-black p-12 flex-col justify-between relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
@@ -98,7 +98,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-white mb-2" style={{ letterSpacing: '-0.03em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <p className="text-blue-100 text-base font-medium">Southeast Michigan Restaurant Compliance</p>
+          <p className="text-slate-300 text-base font-medium">Southeast Michigan Restaurant Compliance</p>
         </div>
         
         <div className="space-y-8 relative z-10">
@@ -110,7 +110,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-semibold mb-2 text-lg">Instant Compliance Answers</h3>
-              <p className="text-blue-100 text-sm leading-relaxed">Get immediate answers to food safety questions using AI trained on FDA, Michigan, and county-specific regulations</p>
+              <p className="text-slate-300 text-sm leading-relaxed">Get immediate answers to food safety questions using AI trained on FDA, Michigan, and county-specific regulations</p>
             </div>
           </div>
 
@@ -122,7 +122,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-semibold mb-2 text-lg">Multi-County Coverage</h3>
-              <p className="text-blue-100 text-sm leading-relaxed">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties with one simple interface</p>
+              <p className="text-slate-300 text-sm leading-relaxed">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties with one simple interface</p>
             </div>
           </div>
           
@@ -134,7 +134,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-semibold mb-2 text-lg">Photo Violation Analysis</h3>
-              <p className="text-blue-100 text-sm leading-relaxed">Upload images to identify potential violations and get instant remediation guidance</p>
+              <p className="text-slate-300 text-sm leading-relaxed">Upload images to identify potential violations and get instant remediation guidance</p>
             </div>
           </div>
 
@@ -146,7 +146,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-semibold mb-2 text-lg">Complete Reference Library</h3>
-              <p className="text-blue-100 text-sm leading-relaxed">Access FDA Food Code, Michigan regulations, and county enforcement guidelines all in one place</p>
+              <p className="text-slate-300 text-sm leading-relaxed">Access FDA Food Code, Michigan regulations, and county enforcement guidelines all in one place</p>
             </div>
           </div>
 
@@ -158,12 +158,12 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-white font-semibold mb-2 text-lg">Mobile-First Design</h3>
-              <p className="text-blue-100 text-sm leading-relaxed">Access compliance tools on any device, optimized for use during kitchen inspections</p>
+              <p className="text-slate-300 text-sm leading-relaxed">Access compliance tools on any device, optimized for use during kitchen inspections</p>
             </div>
           </div>
         </div>
         
-        <div className="text-blue-200 text-xs relative z-10 font-medium">
+        <div className="text-slate-400 text-xs relative z-10 font-medium">
           © 2024 protocolLM. All rights reserved.
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function Home() {
                 <select
                   value={county}
                   onChange={(e) => setCounty(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition font-medium"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10 focus:outline-none text-slate-900 transition font-medium"
                 >
                   {COUNTIES.map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -242,7 +242,7 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10 focus:outline-none text-slate-900 transition"
                 placeholder="you@restaurant.com"
               />
             </div>
@@ -257,7 +257,7 @@ export default function Home() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none text-slate-900 transition"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10 focus:outline-none text-slate-900 transition"
                 placeholder="••••••••"
               />
             </div>
@@ -265,7 +265,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Processing...' : (view === 'signup' ? 'Create account' : 'Sign in')}
             </button>
