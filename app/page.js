@@ -96,11 +96,11 @@ export default function Home() {
         
         <div className="relative z-10">
           <h1 className="text-4xl font-bold text-white tracking-tight">
-            protocolLM
+            protocol<span className="font-normal">LM</span>
           </h1>
         </div>
         
-        <div className="space-y-8 relative z-10">
+        <div className="space-y-6 relative z-10">
           <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
             <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@ export default function Home() {
         </div>
         
         <div className="text-slate-400 text-xs relative z-10 font-medium">
-          © 2024 protocolLM. All rights reserved.
+          © 2025 protocolLM. All rights reserved.
         </div>
       </div>
 
@@ -172,7 +172,7 @@ export default function Home() {
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
             <h1 className="text-3xl font-bold text-slate-950 tracking-tight">
-              protocolLM
+              protocol<span className="font-normal">LM</span>
             </h1>
           </div>
 
@@ -282,7 +282,7 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-8 pt-8 border-t border-slate-200">
               <p className="text-center text-sm text-slate-600 mb-4 font-medium">
-                7-day free trial • No credit card required
+                7-day free trial • Credit card required
               </p>
               <button
                 onClick={() => router.push('/pricing')}
