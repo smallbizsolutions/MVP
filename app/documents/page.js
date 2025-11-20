@@ -272,11 +272,11 @@ export default function Dashboard() {
           part.type === 'text' ? (
             <span key={i}>{part.content}</span>
           ) : (
-            // Updated Citation Style: White background, Green border/text
+            // Updated Citation Style: White background, Raspberry border/text
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-white border border-[#16A34A] text-[#16A34A] hover:bg-green-50 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
+              className="inline-flex items-center bg-white border border-[#BE123C] text-[#BE123C] hover:bg-rose-50 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -370,7 +370,7 @@ export default function Dashboard() {
               <button
                 key={key}
                 onClick={() => handleCountyChange(key)}
-                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#EA580C] hover:bg-orange-50 transition-all text-slate-700 font-medium"
+                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#BE123C] hover:bg-rose-50 transition-all text-slate-700 font-medium"
               >
                 {name} <span className="text-slate-400 text-sm ml-2">— {COUNTY_DOCUMENTS[key].length} documents</span>
               </button>
@@ -403,15 +403,15 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Darker slate (slate-900) */}
+      {/* SIDEBAR - Slate 900 with Raspberry Accents */}
       <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white p-6 transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
-            {/* Colored line */}
-            <div className="h-1 w-full bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] rounded-full mt-1"></div>
+            {/* Line - Raspberry */}
+            <div className="h-1 w-full bg-[#BE123C] rounded-full mt-1"></div>
           </div>
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
         </div>
@@ -458,9 +458,9 @@ export default function Dashboard() {
         {/* HISTORY LIST */}
         {sidebarView === 'history' && (
           <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 custom-scrollbar">
-            {/* New Chat - Darker Green #16A34A */}
+            {/* New Chat - Raspberry */}
             <button
-              className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+              className="w-full bg-[#BE123C] hover:bg-[#9F1239] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
               onClick={startNewChat}
             >
               <span>+</span> New Chat
@@ -480,7 +480,7 @@ export default function Dashboard() {
                   <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
                   <button
                     onClick={(e) => deleteChat(chat.id, e)}
-                    className="text-slate-500 hover:text-[#E11D48] opacity-0 group-hover:opacity-100 transition-all"
+                    className="text-slate-500 hover:text-[#BE123C] opacity-0 group-hover:opacity-100 transition-all"
                   >
                     ✕
                   </button>
@@ -519,13 +519,13 @@ export default function Dashboard() {
                 className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'bg-[#EA580C] text-white' // User bubble is now Darker Orange
+                    : 'bg-[#BE123C] text-white' // User bubble is Raspberry
                 }`}
               >
                 {/* Only show avatar for Assistant */}
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#EA580C] via-[#E11D48] to-[#16A34A] flex items-center justify-center text-[10px] text-white font-bold">
+                    <div className="w-5 h-5 rounded-full bg-[#BE123C] flex items-center justify-center text-[10px] text-white font-bold">
                       LM
                     </div>
                     <span className="font-semibold text-xs text-slate-500">protocolLM</span>
@@ -558,7 +558,7 @@ export default function Dashboard() {
               onClick={() => fileInputRef.current.click()}
               className={`p-3 rounded-xl transition-all ${
                 image 
-                  ? 'bg-[#E11D48] text-white shadow-md' 
+                  ? 'bg-[#BE123C] text-white shadow-md' 
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
               }`}
             >
@@ -569,14 +569,14 @@ export default function Dashboard() {
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder={image ? "Ask a question about this image..." : "Ask a food safety question..."}
-              className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EA580C]/20 focus:border-[#EA580C] transition-all text-sm"
+              className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#BE123C]/20 focus:border-[#BE123C] transition-all text-sm"
             />
 
             <button
               type="submit"
               disabled={isLoading}
-              // Send button matches user bubble (Dark Orange)
-              className="px-6 py-3.5 bg-[#EA580C] hover:bg-[#c2410c] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm"
+              // Send button matches user bubble (Raspberry)
+              className="px-6 py-3.5 bg-[#BE123C] hover:bg-[#9F1239] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm"
             >
               {isLoading ? '...' : 'Send'}
             </button>
