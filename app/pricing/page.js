@@ -57,8 +57,10 @@ export default function Pricing() {
     }
   }
 
-  // The Brand Gradient Definition
-  const gradientClasses = "bg-gradient-to-r from-[#d97706] via-[#be123c] via-[#4338ca] via-[#0284c7] to-[#16a34a]"
+  // THE 5-COLOR GRADIENT (Amber -> Rose -> Indigo -> Sky -> Green)
+  const prismGradient = {
+    background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -88,7 +90,6 @@ export default function Pricing() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4" style={{ letterSpacing: '-0.04em', fontWeight: '800' }}>
             Choose your plan
@@ -105,10 +106,9 @@ export default function Pricing() {
           )}
         </div>
 
-        {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
           
-          {/* Pro Plan - Standard (Slate Border) */}
+          {/* Pro Plan - Standard */}
           <div className="relative bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-slate-400 transition-all duration-300">
             <div className="p-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Pro</h2>
@@ -166,16 +166,15 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Enterprise Plan - "HOLOGRAPHIC" Effect */}
-          {/* 1. The Outer Gradient Wrapper (Creates the Border) */}
-          <div className={`relative rounded-2xl p-[2px] ${gradientClasses} shadow-xl hover:shadow-2xl transition-shadow duration-300`}>
+          {/* Enterprise Plan - 5-COLOR PRISM */}
+          <div className="relative rounded-2xl p-[2px] shadow-xl hover:shadow-2xl transition-shadow duration-300" style={prismGradient}>
             
-            {/* 2. The Most Popular Badge (Gradient Background) */}
-            <div className={`absolute top-0 right-0 ${gradientClasses} text-white text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-bl-xl z-10`}>
+            {/* Badge using 5-color gradient */}
+            <div className="absolute top-0 right-0 text-white text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-bl-xl z-10" style={prismGradient}>
               Most Popular
             </div>
 
-            {/* 3. The Inner White Card */}
+            {/* White Inner Card */}
             <div className="bg-white rounded-xl h-full p-8 relative">
               
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
@@ -192,7 +191,6 @@ export default function Pricing() {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
-                  {/* Using Indigo for checks to match theme */}
                   <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
@@ -224,16 +222,16 @@ export default function Pricing() {
                 </li>
               </ul>
 
-              {/* 4. The Gradient Outline Button */}
+              {/* 5-Color Outline Button */}
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
                 className="group relative w-full rounded-xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {/* Gradient Background Layer (Shows as border) */}
-                <div className={`absolute inset-0 ${gradientClasses}`}></div>
+                {/* The 5-Color Gradient Border Layer */}
+                <div className="absolute inset-0" style={prismGradient}></div>
                 
-                {/* Inner White Layer (The actual clickable area) */}
+                {/* The White Button Face */}
                 <div className="relative m-[2px] bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 rounded-[10px] transition-all flex items-center justify-center">
                   {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
                 </div>
