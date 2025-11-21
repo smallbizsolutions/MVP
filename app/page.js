@@ -105,11 +105,12 @@ export default function Home() {
         }
       `}</style>
 
-      {/* DESKTOP: Side by side layout */}
-      <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* MOBILE-FIRST: Form first, cards second (flex-col-reverse) */}
+      {/* DESKTOP: Cards left, form right (lg:flex-row) */}
+      <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - Features */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
+        {/* LEFT SIDE - Features (shows second on mobile, left on desktop) */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
           
           {/* Header - Absolute top left on desktop */}
           <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full">
@@ -164,7 +165,6 @@ export default function Home() {
                 {/* CARD 3 - GREEN (Verify Compliance) */}
                 <TracingCard delay="700ms" borderColor="#16a34a">
                   <div className="flex items-start gap-3">
-                    {/* Updated to Green Theme */}
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-green-50 flex items-center justify-center border border-green-100">
                       <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                     </div>
@@ -212,8 +212,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form */}
-        {/* Increased padding to lg:pt-40 to push the form down significantly on desktop */}
+        {/* RIGHT SIDE - Auth Form (shows first on mobile, right on desktop) */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12">
           <div className="w-full max-w-md mx-auto">
             
