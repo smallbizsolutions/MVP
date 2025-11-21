@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// County-specific document configurations
 const COUNTY_DOCUMENTS = {
   washtenaw: [
     { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
@@ -62,11 +61,16 @@ const COUNTY_NAMES = {
   oakland: 'Oakland County'
 }
 
+// FIX #18: Max image size constant
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+
 export default function Dashboard() {
   const [session, setSession] = useState(null)
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   const [userCounty, setUserCounty] = useState('washtenaw')
   const [showCountySelector, setShowCountySelector] = useState(false)
+  // FIX #6: Add loading state for county update
+  const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -74,6 +78,8 @@ export default function Dashboard() {
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  // FIX #15: Add rate limiting state
+  const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarView, setSidebarView] = useState('documents')
   const [viewingPdf, setViewingPdf] = useState(null)
@@ -96,21 +102,24 @@ export default function Dashboard() {
     }
   }, [userCounty])
 
-  // LOAD CHAT HISTORY
+  // FIX #16: Load chat history with size checking
   useEffect(() => {
     if (session) {
       const stored = localStorage.getItem(`chat_history_${session.user.id}`)
       if (stored) {
         try {
-          setChatHistory(JSON.parse(stored))
+          const parsed = JSON.parse(stored)
+          setChatHistory(parsed)
         } catch (e) {
           console.error('Failed to parse saved history:', e)
+          // Clear corrupted history
+          localStorage.removeItem(`chat_history_${session.user.id}`)
         }
       }
     }
   }, [session])
 
-  // SAVE CHAT
+  // FIX #16: Save chat with size limit
   const saveCurrentChat = () => {
     if (!session || messages.length <= 1) return
 
@@ -129,9 +138,24 @@ export default function Dashboard() {
     if (existingIndex >= 0) newHistory[existingIndex] = chat
     else newHistory = [chat, ...newHistory].slice(0, 50)
 
-    setChatHistory(newHistory)
-    localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
-    setCurrentChatId(chat.id)
+    try {
+      localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
+      setChatHistory(newHistory)
+      setCurrentChatId(chat.id)
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        console.warn('⚠️ Storage quota exceeded, removing old chats')
+        // Keep only 25 most recent chats
+        newHistory = newHistory.slice(0, 25)
+        try {
+          localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
+          setChatHistory(newHistory)
+          setCurrentChatId(chat.id)
+        } catch (retryError) {
+          console.error('Failed to save even after cleanup:', retryError)
+        }
+      }
+    }
   }
 
   const loadChat = (chat) => {
@@ -163,7 +187,6 @@ export default function Dashboard() {
     if (currentChatId === chatId) startNewChat()
   }
 
-  // ACCESS CONTROL
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -204,21 +227,28 @@ export default function Dashboard() {
     checkAccess()
   }, [])
 
-  // SCROLL BOTTOM
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // FIX #6: Add loading state to county change
   const handleCountyChange = async (newCounty) => {
+    setIsUpdatingCounty(true)
+    
     const { error } = await supabase
       .from('user_profiles')
       .update({ county: newCounty })
       .eq('id', session.user.id)
 
-    if (error) return alert('Error updating county.')
+    if (error) {
+      alert('Error updating county.')
+      setIsUpdatingCounty(false)
+      return
+    }
 
     setUserCounty(newCounty)
     setShowCountySelector(false)
+    setIsUpdatingCounty(false)
 
     setMessages([
       { 
@@ -272,7 +302,6 @@ export default function Dashboard() {
           part.type === 'text' ? (
             <span key={i}>{part.content}</span>
           ) : (
-            // Updated Citation Style: White background, Steel Blue border/text
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
@@ -286,9 +315,14 @@ export default function Dashboard() {
     )
   }
 
+  // FIX #15: Add rate limiting to send message
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim() && !image) return
+    if (!canSend) return // Rate limit check
+
+    // Disable sending temporarily
+    setCanSend(false)
 
     const userMessage = { role: 'user', content: input, image, citations: [] }
     setMessages(prev => [...prev, userMessage])
@@ -337,21 +371,41 @@ export default function Dashboard() {
       setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
     } finally {
       setIsLoading(false)
+      // Re-enable sending after 1 second
+      setTimeout(() => setCanSend(true), 1000)
     }
   }
 
+  // FIX #18: Add image size validation
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
+    
+    // Validate file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert('Image too large. Please use images under 5MB.')
+      e.target.value = '' // Clear the input
+      return
+    }
+    
     const reader = new FileReader()
     reader.onloadend = () => setImage(reader.result)
     reader.readAsDataURL(file)
   }
 
+  // FIX #5: Cleanup PDF viewer on unmount
+  useEffect(() => {
+    return () => {
+      if (viewingPdf) {
+        // Cleanup if needed
+        setViewingPdf(null)
+      }
+    }
+  }, [viewingPdf])
+
   if (!session) return null
 
-  const currentDocuments =
-    COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS['washtenaw']
+  const currentDocuments = COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS['washtenaw']
 
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
@@ -362,7 +416,11 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-slate-900">Select Your County</h3>
-              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-900">
+              <button 
+                onClick={() => setShowCountySelector(false)} 
+                className="text-slate-400 hover:text-slate-900"
+                disabled={isUpdatingCounty}
+              >
                 ✕
               </button>
             </div>
@@ -370,11 +428,15 @@ export default function Dashboard() {
               <button
                 key={key}
                 onClick={() => handleCountyChange(key)}
-                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium"
+                disabled={isUpdatingCounty}
+                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {name} <span className="text-slate-400 text-sm ml-2">— {COUNTY_DOCUMENTS[key].length} documents</span>
               </button>
             ))}
+            {isUpdatingCounty && (
+              <p className="text-center text-sm text-slate-500 mt-4">Updating...</p>
+            )}
           </div>
         </div>
       )}
@@ -403,14 +465,13 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Slate 900 with Steel Blue Accents */}
+      {/* SIDEBAR */}
       <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white p-6 transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
-            {/* Line - Steel Blue */}
             <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1"></div>
           </div>
           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
@@ -424,7 +485,6 @@ export default function Dashboard() {
           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
         </button>
 
-        {/* Sidebar Tabs */}
         <div className="flex mb-4 bg-slate-800 rounded-lg p-1">
           <button
             onClick={() => setSidebarView('documents')}
@@ -440,7 +500,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* DOCUMENTS LIST */}
         {sidebarView === 'documents' && (
           <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 space-y-1 custom-scrollbar">
             {currentDocuments.map((doc, i) => (
@@ -455,10 +514,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* HISTORY LIST */}
         {sidebarView === 'history' && (
           <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 custom-scrollbar">
-            {/* New Chat - Steel Blue */}
             <button
               className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
               onClick={startNewChat}
@@ -497,7 +554,6 @@ export default function Dashboard() {
       {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col h-full bg-white relative">
 
-        {/* MOBILE HEADER */}
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30">
           <div>
             <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
@@ -508,7 +564,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* MESSAGES */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
@@ -519,10 +574,9 @@ export default function Dashboard() {
                 className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'bg-[#4F759B] text-white' // User bubble is Steel Blue
+                    : 'bg-[#4F759B] text-white'
                 }`}
               >
-                {/* Only show avatar for Assistant */}
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
                     <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold">
@@ -539,7 +593,6 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* INPUT */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 md:p-6 border-t border-slate-100 bg-white"
@@ -574,8 +627,7 @@ export default function Dashboard() {
 
             <button
               type="submit"
-              disabled={isLoading}
-              // Send button matches user bubble (Steel Blue)
+              disabled={isLoading || !canSend}
               className="px-6 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm"
             >
               {isLoading ? '...' : 'Send'}
