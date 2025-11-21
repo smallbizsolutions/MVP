@@ -157,7 +157,7 @@ export default function Dashboard() {
   const [userCounty, setUserCounty] = useState('washtenaw')
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
-  const [loadingPortal, setLoadingPortal] = useState(false) // For manage button
+  const [loadingPortal, setLoadingPortal] = useState(false)
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -208,7 +208,6 @@ export default function Dashboard() {
     router.push('/')
   }
 
-  // UPDATED: Manage Subscription now calls Stripe Portal
   const handleManageSubscription = async () => {
     setLoadingPortal(true)
     try {
@@ -442,14 +441,9 @@ export default function Dashboard() {
 
       const data = await response.json()
 
-      if (response.status === 403) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ ' + data.error }])
-        return router.push('/pricing')
-      }
-
-      if (response.status === 429) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ ' + data.error }])
-        return
+      // FIX: Catch non-200 responses specifically
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.status}`)
       }
 
       setMessages(prev => [
@@ -467,7 +461,8 @@ export default function Dashboard() {
 
       setTimeout(saveCurrentChat, 200)
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
+      // FIX: Display the error in the chat bubble
+      setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${err.message}` }])
     } finally {
       setIsLoading(false)
       setTimeout(() => setCanSend(true), 1000)
@@ -566,7 +561,6 @@ export default function Dashboard() {
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
 
-            {/* NEW CHAT BUTTON: Gradient Outline */}
             <button
               onClick={startNewChat}
               className="group relative w-full rounded-xl overflow-hidden mb-4 shadow-sm"
@@ -607,7 +601,6 @@ export default function Dashboard() {
 
           <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
-              {/* User Avatar with Gradient */}
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm" style={prismGradient}>
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
@@ -734,7 +727,6 @@ export default function Dashboard() {
                 disabled={isLoading}
               />
 
-              {/* SEND BUTTON: Gradient Outline */}
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
