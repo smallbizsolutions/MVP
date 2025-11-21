@@ -22,25 +22,25 @@ export async function GET(request) {
       // Get county from user metadata (set during signup)
       const county = session.user.user_metadata?.county || 'washtenaw'
       
-      // Create user profile using the database function (email confirmation scenario)
-      const { error: profileError } = await supabase.rpc('create_user_profile', {
-        user_id: session.user.id,
-        user_email: session.user.email
-      })
-
-      // Log error but don't fail - profile might already exist
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-      }
-
-      // Update county if profile was created
-      const { error: countyError } = await supabase
+      // FIX #3: Use upsert to avoid race condition between profile creation and update
+      const { error: profileError } = await supabase
         .from('user_profiles')
-        .update({ county: county })
-        .eq('id', session.user.id)
+        .upsert({ 
+          id: session.user.id,
+          email: session.user.email,
+          county: county,
+          is_subscribed: false,
+          requests_used: 0,
+          images_used: 0,
+          updated_at: new Date().toISOString()
+        }, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        })
 
-      if (countyError) {
-        console.error('County update error:', countyError)
+      if (profileError) {
+        console.error('Profile upsert error:', profileError)
+        // Don't fail the auth flow - profile might exist from trigger
       }
 
       // Check if user has subscription
