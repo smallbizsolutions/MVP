@@ -64,7 +64,9 @@ export async function POST(request) {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+    
+    // UPDATED: Using the smartest stable model
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-002" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
@@ -81,28 +83,23 @@ export async function POST(request) {
       const results = await searchDocuments(searchQuery, matchCount, userCounty)
       
       if (!results || results.length === 0) {
-        return NextResponse.json({
-          message: `I don't have ${COUNTY_NAMES[userCounty]} documents loaded. Please check that documents exist in the public/documents/${userCounty}/ folder and embeddings.json has been generated.`,
-          county: userCounty,
-          citations: [],
-          documentsSearched: 0
-        })
-      }
-
-      contextText = results.map((doc, idx) => {
-        const source = doc.source || 'Unknown Doc'
-        const page = doc.page || 'N/A'
-        const docKey = `${source}-${page}`
-        if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
-          usedDocs.push({ source, page })
-        }
-        return `[DOCUMENT ${idx + 1}]
+        console.log(`No documents found for ${userCounty}`)
+      } else {
+        contextText = results.map((doc, idx) => {
+          const source = doc.source || 'Unknown Doc'
+          const page = doc.page || 'N/A'
+          const docKey = `${source}-${page}`
+          if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
+            usedDocs.push({ source, page })
+          }
+          return `[DOCUMENT ${idx + 1}]
 SOURCE: ${source}
 PAGE: ${page}
 COUNTY: ${COUNTY_NAMES[userCounty]}
 CONTENT: ${doc.text}
 `
-      }).join("\n---\n\n")
+        }).join("\n---\n\n")
+      }
     }
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
