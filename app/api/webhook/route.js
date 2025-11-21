@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
+// FIX #2: Validate environment variables before use
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ STRIPE_SECRET_KEY is missing');
+}
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  console.error('❌ STRIPE_WEBHOOK_SECRET is missing');
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -9,6 +17,14 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
+  // FIX #2: Validate webhook secret exists
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('❌ Webhook secret not configured');
+    return NextResponse.json({ 
+      error: 'Webhook configuration error' 
+    }, { status: 500 });
+  }
+
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
 
@@ -41,11 +57,9 @@ export async function POST(req) {
 
         console.log(`💳 Checkout completed for user ${userId}, plan: ${plan || 'unknown'}`);
 
-        // If subscription is in trial, mark as subscribed immediately
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
         const isTrialing = subscription.status === 'trialing';
 
-        // Create or update subscription record
         const { error: subError } = await supabase
           .from('subscriptions')
           .upsert({
@@ -65,11 +79,10 @@ export async function POST(req) {
           console.error('❌ Failed to create subscription:', subError);
         }
 
-        // Update user profile - grant access during trial
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({ 
-            is_subscribed: true, // ✅ Grant access immediately (includes trial)
+            is_subscribed: true,
             requests_used: 0,
             updated_at: new Date().toISOString()
           })
@@ -88,7 +101,6 @@ export async function POST(req) {
         const subscription = event.data.object;
         console.log(`⏰ Trial ending soon for subscription ${subscription.id}`);
         
-        // Optional: Send email reminder to user
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -97,7 +109,6 @@ export async function POST(req) {
 
         if (sub?.user_id) {
           console.log(`📧 Should send trial ending email to user ${sub.user_id}`);
-          // Implement email notification here
         }
         break;
       }
@@ -107,7 +118,6 @@ export async function POST(req) {
         
         console.log(`📝 Subscription ${subscription.id} updated to status: ${subscription.status}`);
 
-        // Get the user associated with this subscription
         const { data: existingSub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -119,7 +129,6 @@ export async function POST(req) {
           break;
         }
 
-        // Update subscription status
         const { error: subError } = await supabase
           .from('subscriptions')
           .update({ 
@@ -133,9 +142,7 @@ export async function POST(req) {
           console.error('❌ Failed to update subscription:', subError);
         }
 
-        // Handle different subscription statuses
         if (subscription.status === 'active') {
-          // Subscription is now active (trial ended, payment succeeded)
           await supabase
             .from('user_profiles')
             .update({ 
@@ -147,7 +154,6 @@ export async function POST(req) {
           console.log(`✅ User ${existingSub.user_id} subscription activated`);
         } 
         else if (subscription.status === 'past_due' || subscription.status === 'unpaid') {
-          // Payment failed, disable access
           await supabase
             .from('user_profiles')
             .update({ 
@@ -159,7 +165,6 @@ export async function POST(req) {
           console.log(`⚠️ User ${existingSub.user_id} access revoked (status: ${subscription.status})`);
         }
         else if (subscription.status === 'canceled') {
-          // Subscription canceled
           await supabase
             .from('user_profiles')
             .update({ 
@@ -179,7 +184,6 @@ export async function POST(req) {
         
         console.log(`🗑️ Subscription ${subscription.id} deleted`);
 
-        // Get user ID
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -187,7 +191,6 @@ export async function POST(req) {
           .single();
 
         if (sub?.user_id) {
-          // Revoke access
           await supabase
             .from('user_profiles')
             .update({ 
@@ -199,7 +202,6 @@ export async function POST(req) {
           console.log(`❌ User ${sub.user_id} access revoked (subscription deleted)`);
         }
 
-        // Mark subscription as canceled
         await supabase
           .from('subscriptions')
           .update({ 
@@ -218,7 +220,6 @@ export async function POST(req) {
         if (subscriptionId) {
           console.log(`✅ Payment succeeded for subscription ${subscriptionId}`);
 
-          // Get user from subscription
           const { data: sub } = await supabase
             .from('subscriptions')
             .select('user_id')
@@ -226,12 +227,11 @@ export async function POST(req) {
             .single();
 
           if (sub?.user_id) {
-            // Reset monthly request counter on successful payment
             await supabase
               .from('user_profiles')
               .update({ 
                 requests_used: 0,
-                is_subscribed: true, // Ensure access is granted
+                is_subscribed: true,
                 updated_at: new Date().toISOString()
               })
               .eq('id', sub.user_id);
@@ -249,7 +249,6 @@ export async function POST(req) {
         if (subscriptionId) {
           console.log(`❌ Payment failed for subscription ${subscriptionId}`);
 
-          // Get user from subscription
           const { data: sub } = await supabase
             .from('subscriptions')
             .select('user_id')
@@ -257,7 +256,6 @@ export async function POST(req) {
             .single();
 
           if (sub?.user_id) {
-            // Mark subscription as past_due
             await supabase
               .from('subscriptions')
               .update({ 
@@ -266,8 +264,6 @@ export async function POST(req) {
               })
               .eq('stripe_subscription_id', subscriptionId);
 
-            // Optionally revoke access immediately or wait for retry
-            // For now, we'll wait for the subscription.updated event
             console.log(`⚠️ Payment failed for user ${sub.user_id} - awaiting retry`);
           }
         }
