@@ -11,13 +11,16 @@ const COUNTY_NAMES = {
   oakland: 'Oakland County'
 }
 
-// Environment variable validation
-const requiredEnvVars = ['GEMINI_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL'];
+// Valid counties for validation
+const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
+
+// Environment variable validation - Generic error messages
+const requiredEnvVars = ['GEMINI_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL']
 requiredEnvVars.forEach(varName => {
   if (!process.env[varName]) {
-    console.error(`❌ Missing required environment variable: ${varName}`);
+    console.error(`❌ Missing required environment variable: ${varName}`)
   }
-});
+})
 
 export async function POST(request) {
   const cookieStore = cookies()
@@ -56,8 +59,11 @@ export async function POST(request) {
 
     const { messages, image, county } = await request.json()
     
-    // Use county from request or fallback to profile
-    const userCounty = county || profile.county || 'washtenaw'
+    // FIX #4: Validate county input
+    const requestedCounty = county || profile.county || 'washtenaw'
+    const userCounty = VALID_COUNTIES.includes(requestedCounty) 
+      ? requestedCounty 
+      : 'washtenaw'
 
     // Check request limit
     if (profile.requests_used >= limits.requests) {
@@ -73,8 +79,12 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
+    // FIX #1: Generic error message for API key
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is missing")
+      console.error("GEMINI_API_KEY is missing")
+      return NextResponse.json({ 
+        error: 'Service configuration error. Please contact support.' 
+      }, { status: 500 })
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -103,7 +113,6 @@ export async function POST(request) {
       
       console.log('📊 Embedding generated, searching documents...')
       
-      // CRITICAL FIX: Check total documents for this county FIRST
       const { count: totalDocs, error: countError } = await supabase
         .from('documents')
         .select('*', { count: 'exact', head: true })
@@ -136,18 +145,14 @@ Please contact support if this persists.`,
         })
       }
 
-      // CRITICAL FIX: Use match_documents_by_county function that filters DURING search
-      // This ensures we ONLY get documents from the correct county
-      const matchThreshold = image ? 0.25 : 0.4 // Lower thresholds for better recall
+      const matchThreshold = image ? 0.25 : 0.4
       const matchCount = image ? 30 : 20
       
       console.log(`🔎 Searching with threshold=${matchThreshold}, count=${matchCount}, county=${userCounty}`)
 
-      // Try to use county-filtered function first
       let documents = null
       let searchError = null
 
-      // First attempt: Use match_documents_by_county if it exists
       try {
         const result = await supabase.rpc('match_documents_by_county', {
           query_embedding: embedding,
@@ -159,15 +164,13 @@ Please contact support if this persists.`,
         searchError = result.error
       } catch (err) {
         console.log('⚠️ match_documents_by_county not available, falling back to match_documents')
-        // Fallback: Use regular match_documents and filter afterwards
         const result = await supabase.rpc('match_documents', {
           query_embedding: embedding,
           match_threshold: matchThreshold,
-          match_count: matchCount * 2 // Get more to account for filtering
+          match_count: matchCount * 2
         })
         
         if (!result.error && result.data) {
-          // Filter to only this county's documents
           documents = result.data.filter(doc => doc.metadata?.county === userCounty).slice(0, matchCount)
         }
         searchError = result.error
@@ -182,10 +185,9 @@ Please contact support if this persists.`,
 
       if (!documents || documents.length === 0) {
         console.error(`⚠️ NO DOCUMENTS RETRIEVED FOR ${userCounty} - Search may be too restrictive`)
-        // Try one more time with very low threshold
         const { data: fallbackDocs } = await supabase.rpc('match_documents', {
           query_embedding: embedding,
-          match_threshold: 0.1, // Very low threshold
+          match_threshold: 0.1,
           match_count: matchCount * 3
         })
         
@@ -200,7 +202,6 @@ Please contact support if this persists.`,
         contextText = documents.map((doc, idx) => {
           const source = doc.metadata?.source || 'Unknown Doc'
           const page = doc.metadata?.page
-          // Track unique documents
           const docKey = `${source}-${page}`
           if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
             usedDocs.push({ source, page })
@@ -216,7 +217,6 @@ CONTENT: ${doc.content}
       }
     }
 
-    // If we have no context and it's an image, return error
     if (image && !contextText) {
       console.error('🚨 CRITICAL: No documents retrieved for image analysis!')
       return NextResponse.json({
@@ -270,6 +270,13 @@ RESPONSE FORMAT:
     promptParts.push(`user: ${lastUserMessage}`)
 
     if (image) {
+      // FIX #8: Validate image format before processing
+      if (!image.startsWith('data:image/')) {
+        return NextResponse.json({ 
+          error: 'Invalid image format. Please upload a valid image file.' 
+        }, { status: 400 })
+      }
+
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
       
@@ -345,7 +352,7 @@ If documents don't cover what you see: "I observed [specific issue] but the curr
   } catch (error) {
     console.error('❌ LLM API Error:', error)
     return NextResponse.json({ 
-      error: `Error: ${error.message}` 
+      error: `Service error occurred. Please try again.` 
     }, { status: 500 })
   }
 }
