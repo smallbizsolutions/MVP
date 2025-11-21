@@ -105,13 +105,14 @@ export default function Home() {
         }
       `}</style>
 
-      {/* DESKTOP: Side by side, specific top padding to move everything UP */}
+      {/* DESKTOP: Side by side layout */}
       <div className="flex flex-col lg:flex-row min-h-screen">
         
         {/* LEFT SIDE - Features */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col lg:pt-24 relative">
+        {/* Changed pt-24 to pt-20 for slight downward adjustment */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
           
-          {/* Header - Absolute top left on desktop for layout stability */}
+          {/* Header - Absolute top left on desktop */}
           <div className="px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
@@ -124,7 +125,7 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Content area - Pushed down by pt-24 on desktop to align with right side */}
+          {/* Content area */}
           <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 pb-8 lg:mt-8">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               {/* Vertical Line Timeline */}
@@ -161,11 +162,11 @@ export default function Home() {
                   </div>
                 </TracingCard>
 
-                {/* CARD 3 - GREEN */}
-                <TracingCard delay="700ms" borderColor="#16a34a">
+                {/* CARD 3 - STEEL BLUE */}
+                <TracingCard delay="700ms" borderColor="#4F759B">
                   <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-green-50 flex items-center justify-center border border-green-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#4F759B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Verify compliance with a photo</h3>
@@ -211,8 +212,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form - Moved UP using justify-start and pt-24 */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-32 px-6 sm:px-8 lg:px-12">
+        {/* RIGHT SIDE - Auth Form */}
+        {/* Changed pt-32 to pt-24 for slight downward adjustment */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-24 px-6 sm:px-8 lg:px-12">
           <div className="w-full max-w-md mx-auto">
 
             <div className="mb-6">
