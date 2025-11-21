@@ -14,13 +14,6 @@ const COUNTY_NAMES = {
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 
-const requiredEnvVars = ['GEMINI_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL']
-requiredEnvVars.forEach(varName => {
-  if (!process.env[varName]) {
-    console.error(`❌ Missing required environment variable: ${varName}`)
-  }
-})
-
 export async function POST(request) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -29,16 +22,11 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
       .eq('id', session.user.id)
       .single()
-
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
-      return NextResponse.json({ error: 'Failed to verify subscription' }, { status: 500 })
-    }
 
     if (!profile?.is_subscribed) {
       return NextResponse.json({ 
@@ -65,21 +53,14 @@ export async function POST(request) {
 
     if (profile.requests_used >= limits.requests) {
       return NextResponse.json({ 
-        error: `Monthly limit of ${limits.requests} queries reached. Resets on your next billing date.` 
+        error: `Monthly limit of ${limits.requests} queries reached.` 
       }, { status: 429 })
     }
 
     if (image && profile.images_used >= limits.images) {
       return NextResponse.json({ 
-        error: `Monthly limit of ${limits.images} image analyses reached. Resets on your next billing date.` 
+        error: `Monthly limit of ${limits.images} image analyses reached.` 
       }, { status: 429 })
-    }
-
-    if (!process.env.GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY is missing")
-      return NextResponse.json({ 
-        error: 'Service configuration error. Please contact support.' 
-      }, { status: 500 })
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
@@ -92,110 +73,56 @@ export async function POST(request) {
     let searchQuery = lastUserMessage
 
     if (image) {
-      searchQuery = `food safety violations equipment cleanliness sanitation surfaces grease buildup 
-      temperature control storage cross contamination pest control proper maintenance 
-      cleaning procedures facility requirements non-food contact surfaces food contact surfaces
-      cooling procedures holding temperatures cooking temperatures equipment design
-      ${lastUserMessage}`.trim()
-      console.log('🔍 IMAGE ANALYSIS - Enhanced search query:', searchQuery.substring(0, 100) + '...')
+      searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
-      console.log('📊 Searching local embeddings...')
-      
       const matchCount = image ? 30 : 20
-      const results = await searchDocuments(searchQuery, matchCount)
+      const results = await searchDocuments(searchQuery, matchCount, userCounty)
       
-      // Filter by county
-      const documents = results.filter(doc => doc.county === userCounty)
-      
-      console.log(`🔎 Local search returned ${documents.length} documents for ${userCounty}`)
-
-      if (!documents || documents.length === 0) {
-        console.error(`⚠️ NO DOCUMENTS RETRIEVED FOR ${userCounty}`)
+      if (!results || results.length === 0) {
         return NextResponse.json({
-          message: `⚠️ **No ${COUNTY_NAMES[userCounty]} documents available**
-I couldn't find any documents for ${COUNTY_NAMES[userCounty]}. Please ensure:
-1. Run: \`npm run build-embeddings\` to create embeddings
-2. The file \`public/embeddings.json\` exists
-3. Documents exist in \`public/documents/${userCounty}/\`
-
-Contact support if this persists.`,
+          message: `I don't have ${COUNTY_NAMES[userCounty]} documents loaded. Please check that documents exist in the public/documents/${userCounty}/ folder and embeddings.json has been generated.`,
           county: userCounty,
           citations: [],
           documentsSearched: 0
         })
       }
 
-      if (documents.length > 0) {
-        console.log(`✅ Using ${documents.length} ${userCounty} documents for context`)
-        contextText = documents.map((doc, idx) => {
-          const source = doc.source || 'Unknown Doc'
-          const page = doc.page || doc.chunkIndex || 'N/A'
-          const docKey = `${source}-${page}`
-          if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
-            usedDocs.push({ source, page })
-          }
-          return `[DOCUMENT ${idx + 1}]
+      contextText = results.map((doc, idx) => {
+        const source = doc.source || 'Unknown Doc'
+        const page = doc.page || 'N/A'
+        const docKey = `${source}-${page}`
+        if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
+          usedDocs.push({ source, page })
+        }
+        return `[DOCUMENT ${idx + 1}]
 SOURCE: ${source}
 PAGE: ${page}
 COUNTY: ${COUNTY_NAMES[userCounty]}
 CONTENT: ${doc.text}
 `
-        }).join("\n---\n\n")
-        console.log('📋 Documents being used:', usedDocs.map(d => `${d.source} (p.${d.page})`).join(', '))
-      }
-    }
-
-    if (image && !contextText) {
-      console.error('🚨 CRITICAL: No documents retrieved for image analysis!')
-      return NextResponse.json({
-        message: `⚠️ **Unable to analyze image**
-I couldn't retrieve any ${COUNTY_NAMES[userCounty]} regulatory documents. Please run \`npm run build-embeddings\` first.`,
-        county: userCounty,
-        citations: [],
-        documentsSearched: 0
-      })
+      }).join("\n---\n\n")
     }
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
 
-    const systemPrompt = `You are the compliance assistant for protocolLM, helping ${countyName} restaurants maintain food safety compliance.
+    const systemPrompt = `You are protocolLM compliance assistant for ${countyName}.
 
-CRITICAL CITATION RULES - READ CAREFULLY:
-1. You have access ONLY to ${countyName} documents shown in RETRIEVED CONTEXT below
-2. You MUST cite every single regulatory statement using: **[Document Name, Page X]**
-3. NEVER provide information without a citation from RETRIEVED CONTEXT
-4. If RETRIEVED CONTEXT is empty or doesn't cover the topic, say: "I don't have specific ${countyName} documents for this issue."
-5. DO NOT use general food safety knowledge - ONLY cite from RETRIEVED CONTEXT
+CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
 
-RETRIEVED CONTEXT (${countyName} REGULATIONS):
-${contextText || `⚠️ NO DOCUMENTS RETRIEVED - Cannot provide regulatory guidance without document citations.`}
+RETRIEVED CONTEXT (${countyName}):
+${contextText || 'No documents available.'}
 
-${contextText ? `
-AVAILABLE DOCUMENTS:
-${usedDocs.map(d => `- ${d.source} (Page ${d.page})`).join('\n')}
+${contextText ? `AVAILABLE DOCUMENTS:\n${usedDocs.map(d => `- ${d.source} (Page ${d.page})`).join('\n')}` : ''}
 
-You MUST cite from these documents using **[Document Name, Page X]** format.
-` : ''}
-
-RESPONSE FORMAT:
-- Always use bold citations: **[Document Name, Page X]**
-- Never provide advice without citations
-- If you can't find a citation, explicitly state it
-`
+Always cite from documents using **[Document Name, Page X]** format.`
 
     let promptParts = [systemPrompt]
     messages.slice(0, -1).forEach(m => promptParts.push(`${m.role}: ${m.content}`))
     promptParts.push(`user: ${lastUserMessage}`)
 
     if (image) {
-      if (!image.startsWith('data:image/')) {
-        return NextResponse.json({ 
-          error: 'Invalid image format. Please upload a valid image file.' 
-        }, { status: 400 })
-      }
-
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
       
@@ -206,48 +133,23 @@ RESPONSE FORMAT:
         }
       })
 
-      if (!contextText) {
-        promptParts.push(`ERROR: No regulatory documents were retrieved for ${countyName}. 
-You CANNOT analyze this image without access to county-specific regulations.
-Respond with the error message explaining that documents are missing.`)
-      } else {
-        promptParts.push(`ANALYZE THIS IMAGE FOR FOOD SAFETY VIOLATIONS
-MANDATORY REQUIREMENTS:
-1. Look at the image carefully and identify ANY potential food safety issues
-2. For EVERY issue, cite the specific document and page from RETRIEVED CONTEXT above
-3. Format: **[Document Name, Page X]**
-4. If you see an issue but can't find it in RETRIEVED CONTEXT, state: "I observed [issue] but don't have a ${countyName} citation in the current documents."
-5. DO NOT provide generic advice - ONLY cite from the ${usedDocs.length} documents listed above
-
-EXAMPLE RESPONSE FORMAT:
-"I observed grease buildup on the stovetop. Equipment food-contact surfaces and utensils must be clean to sight and touch **[MI Modified Food Code, Page 15]**. Non-food-contact surfaces should be kept free of accumulation of dust, dirt, and food residue **[Cross Contamination, Page 4]**."
-
-If documents don't cover what you see: "I observed [specific issue] but the current ${countyName} documents don't specifically address this violation."`)
-      }
+      promptParts.push(`Analyze this image for food safety violations. Cite specific documents and pages.`)
     }
 
     const result = await chatModel.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
 
-    // Update counters
-    const updates = { 
-      requests_used: profile.requests_used + 1 
-    }
+    const updates = { requests_used: profile.requests_used + 1 }
     if (image) {
       updates.images_used = (profile.images_used || 0) + 1
     }
 
-    const { error: updateError } = await supabase
+    await supabase
       .from('user_profiles')
       .update(updates)
       .eq('id', session.user.id)
 
-    if (updateError) {
-      console.error('Failed to update counters:', updateError)
-    }
-
-    // Extract citations from response
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
@@ -259,8 +161,6 @@ If documents don't cover what you see: "I observed [specific issue] but the curr
       })
     }
 
-    console.log(`✅ Response generated with ${citations.length} citations from ${usedDocs.length} documents`)
-
     return NextResponse.json({ 
       message: text,
       county: userCounty,
@@ -269,9 +169,9 @@ If documents don't cover what you see: "I observed [specific issue] but the curr
     })
 
   } catch (error) {
-    console.error('❌ LLM API Error:', error)
+    console.error('Error:', error)
     return NextResponse.json({ 
-      error: `Service error occurred. Please try again.` 
+      error: 'Service error occurred.' 
     }, { status: 500 })
   }
 }
