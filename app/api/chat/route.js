@@ -39,8 +39,10 @@ export async function POST(request) {
     const userCounty = VALID_COUNTIES.includes(requestedCounty) ? requestedCounty : 'washtenaw'
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    // Use the smartest stable model
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-002" })
+    
+    // FIX: Switch back to the stable "gemini-1.5-pro" tag
+    // This is the "Smart" model, but the stable version that always exists.
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
@@ -126,7 +128,6 @@ Always cite from documents using **[Document Name, Page X]** format.`
 
   } catch (error) {
     console.error('Detailed Backend Error:', error)
-    // Return 500 so frontend can catch it, but include message
     return NextResponse.json({ 
       error: error.message || 'Service error occurred.' 
     }, { status: 500 })
