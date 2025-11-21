@@ -203,11 +203,9 @@ export default function Dashboard() {
     const pageMatch = citation.pages.match(/\d+/)
     const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
 
-    // Try to find the file in the county folder
-    // This will attempt to open it, but if file doesn't exist, browser will show 404
     setViewingPdf({
       title: docName,
-      filename: `${docName}.pdf`, // Assumes PDF format
+      filename: `${docName}.pdf`,
       county: userCounty,
       targetPage: pageNum
     })
@@ -395,10 +393,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Now only shows chat history */}
-      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 z-40 ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      {/* SIDEBAR - Fixed positioning, slides from LEFT */}
+      <div className={`fixed inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 z-40 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } md:relative md:translate-x-0`}>
         <div className="p-6 flex-shrink-0 border-b border-slate-800">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -424,7 +422,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Chat History - scrollable */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar min-h-0">
           {chatHistory.length === 0 && (
             <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
@@ -456,14 +453,16 @@ export default function Dashboard() {
       {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col bg-white relative h-screen overflow-hidden">
 
+        {/* Mobile header with hamburger on LEFT */}
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
-          <div>
+          <button onClick={() => setIsSidebarOpen(true)} className="text-white">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <div className="text-center">
             <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
             <div className="text-xs text-slate-400">{COUNTY_NAMES[userCounty]}</div>
           </div>
-          <button onClick={() => setIsSidebarOpen(true)} className="text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-          </button>
+          <div className="w-6"></div> {/* Spacer for centering */}
         </div>
 
         {/* Messages area */}
@@ -515,50 +514,56 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
+        {/* Input area - FIXED BOTTOM with safe-area-inset */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
+          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
         >
-          <div className="max-w-4xl mx-auto relative flex items-center gap-3">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageSelect}
-            />
+          <div className="max-w-4xl mx-auto">
+            {/* Input row */}
+            <div className="flex items-end gap-2 md:gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current.click()}
-              className={`p-3 rounded-xl transition-all flex-shrink-0 ${
-                image 
-                  ? 'bg-[#4F759B] text-white shadow-md' 
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              }`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
-            </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                  image 
+                    ? 'bg-[#4F759B] text-white shadow-md' 
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+              </button>
 
-            <input
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={image ? "Ask a question about this image..." : "Ask a food safety question..."}
-              className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm"
-              disabled={isLoading}
-            />
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={image ? "Ask about this image..." : "Ask a question..."}
+                className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm min-w-0"
+                disabled={isLoading}
+              />
 
-            <button
-              type="submit"
-              disabled={isLoading || !canSend}
-              className="px-6 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
-            >
-              Send
-            </button>
-          </div>
-          <div className="text-center mt-2">
-             <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+              <button
+                type="submit"
+                disabled={isLoading || !canSend}
+                className="px-5 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
+              >
+                Send
+              </button>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="text-center mt-2">
+              <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+            </div>
           </div>
         </form>
       </div>
