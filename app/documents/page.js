@@ -32,7 +32,6 @@ const ParticleBackground = () => {
 
     let mouse = { x: null, y: null }
 
-    // Initialize only once
     function initParticles() {
       particles.length = 0
       for (let i = 0; i < particleCount; i++) {
@@ -40,7 +39,6 @@ const ParticleBackground = () => {
       }
     }
 
-    // Simple resize: don't reset particles
     const handleResize = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.offsetWidth
@@ -111,20 +109,16 @@ const ParticleBackground = () => {
           let distance = Math.sqrt(dx * dx + dy * dy)
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
-            
             ctx.globalAlpha = opacity * 0.4 
-            
             const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
             gradient.addColorStop(0, particles[i].color)
             gradient.addColorStop(1, particles[j].color)
-            
             ctx.strokeStyle = gradient
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
-            
             ctx.globalAlpha = 1.0
           }
         }
@@ -133,7 +127,7 @@ const ParticleBackground = () => {
     }
 
     handleResize()
-    initParticles() // Only once
+    initParticles()
     animate()
 
     window.addEventListener('resize', handleResize)
@@ -214,6 +208,17 @@ export default function Dashboard() {
       }
     }
   }, [session])
+
+  // NEW: Sign Out Function
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  // NEW: Manage Subscription Function
+  const handleManageSubscription = () => {
+    router.push('/pricing') // Or to your stripe customer portal link
+  }
 
   const saveCurrentChat = () => {
     if (!session || messages.length <= 1) return
@@ -532,13 +537,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR (Light Theme + Particles) */}
+      {/* SIDEBAR */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
         
-        {/* Particle Background Layer */}
         <ParticleBackground />
         
-        {/* Sidebar Content (z-10 to sit above particles) */}
         <div className="relative z-10 flex flex-col h-full">
           <div className="p-6 flex-shrink-0 border-b border-slate-200/60 bg-slate-50/80 backdrop-blur-sm">
             <div className="flex justify-between items-center mb-6">
@@ -591,6 +594,38 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+
+          {/* NEW: User Footer (Sign Out & Manage) */}
+          <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full bg-[#4F759B] flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-900 truncate">
+                  {session?.user?.email}
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium capitalize">
+                  {subscriptionInfo?.plan === 'enterprise' ? 'Enterprise' : 'Pro'} Plan
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={handleManageSubscription}
+                className="text-xs font-semibold text-slate-600 hover:text-[#4F759B] bg-white border border-slate-200 hover:border-[#4F759B] py-2 rounded-lg transition-all"
+              >
+                Manage
+              </button>
+              <button 
+                onClick={handleSignOut}
+                className="text-xs font-semibold text-slate-600 hover:text-red-600 bg-white border border-slate-200 hover:border-red-200 py-2 rounded-lg transition-all"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
