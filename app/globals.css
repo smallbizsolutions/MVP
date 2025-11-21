@@ -41,14 +41,11 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* Matte Brand Colors - Spearmint, Creamsicle, Salmon */
+/* Matte Brand Colors - Steel Blue Primary */
 :root {
-  --color-spearmint: #86EFAC;
-  --color-creamsicle: #FB923C;
-  --color-salmon: #FB7185;
-  --color-spearmint-dark: #4ADE80;
-  --color-creamsicle-dark: #F97316;
-  --color-salmon-dark: #F43F5E;
+  --color-steel-blue: #4F759B;
+  --color-steel-blue-dark: #3e5c7a;
+  --color-steel-blue-light: #6b8fb3;
 }
 
 /* Simple Card Reveal Animation - No Glow */
@@ -74,7 +71,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   inset: 0;
   border-radius: 0.75rem;
-  border: 2px solid var(--color-spearmint);
+  border: 2px solid var(--color-steel-blue);
   opacity: 0;
   animation: content-fade-in 0.4s ease-out 0.8s forwards;
   pointer-events: none;
@@ -88,6 +85,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-steel-blue);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-steel-blue-dark);
+}
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -99,15 +115,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-spearmint);
+  background: var(--color-steel-blue);
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-spearmint-dark);
+  background: var(--color-steel-blue-dark);
 }
 
-/* Loading Animation - Uses brand colors */
+/* Loading Animation */
 @keyframes dot-flashing {
   0% {
     opacity: 0.2;
@@ -135,21 +151,36 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .loading-dots .dot:nth-child(1) {
-  background-color: var(--color-spearmint);
+  background-color: var(--color-steel-blue);
   animation-delay: 0s;
 }
 
 .loading-dots .dot:nth-child(2) {
-  background-color: var(--color-creamsicle);
+  background-color: #64748b;
   animation-delay: 0.2s;
 }
 
 .loading-dots .dot:nth-child(3) {
-  background-color: var(--color-salmon);
+  background-color: #94a3b8;
   animation-delay: 0.4s;
 }
 
-/* Simple matte background - no animation */
+/* Simple matte background */
 .matte-background {
-  background: #f0fdf4;
+  background: #f8fafc;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, textarea, select {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus states for accessibility */
+button:focus-visible, 
+a:focus-visible, 
+input:focus-visible, 
+textarea:focus-visible, 
+select:focus-visible {
+  outline: 2px solid var(--color-steel-blue);
+  outline-offset: 2px;
 }
