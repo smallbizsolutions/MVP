@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background Component (5-Color Version) ---
+// --- 1. Particle Background (Gradient Lines Version) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -22,7 +22,7 @@ const ParticleBackground = () => {
       '#16a34a', // Green
       '#0284c7', // Sky
       '#4338ca', // Indigo
-      '#4F759B'  // Brand Blue (Protocol)
+      '#4F759B'  // Brand Blue
     ]
 
     const particleCount = 60 
@@ -57,8 +57,7 @@ const ParticleBackground = () => {
         this.y = Math.random() * canvas.height
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1.5 // Slightly varied size
-        // Assign a random color from our specific palette
+        this.size = Math.random() * 2 + 1.5 
         this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
@@ -110,15 +109,25 @@ const ParticleBackground = () => {
           let dy = particles[i].y - particles[j].y
           let distance = Math.sqrt(dx * dx + dy * dy)
           
-          // We keep the connections neutral/brand color so it doesn't look messy
           if (distance < connectionDistance) {
+            // START: GRADIENT LINE LOGIC
             let opacity = 1 - (distance / connectionDistance)
-            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.15})` 
+            ctx.globalAlpha = opacity * 0.4 // Lowered slightly so colors don't overwhelm text
+            
+            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
+            gradient.addColorStop(0, particles[i].color)
+            gradient.addColorStop(1, particles[j].color)
+            
+            ctx.strokeStyle = gradient
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
+            
+            // Reset Alpha for next drawing
+            ctx.globalAlpha = 1.0
+            // END: GRADIENT LINE LOGIC
           }
         }
       }
@@ -173,9 +182,7 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        // Hardcoded Production URL to fix localhost bug
         const productionUrl = 'https://no-rap-production.up.railway.app'
-        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -344,7 +351,6 @@ export default function Home() {
 
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
-            
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
