@@ -34,6 +34,7 @@ const ParticleBackground = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
+        initParticles()
       }
     }
 
@@ -156,6 +157,7 @@ export default function Dashboard() {
   const [userCounty, setUserCounty] = useState('washtenaw')
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
+  const [loadingPortal, setLoadingPortal] = useState(false) // For manage button
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -172,7 +174,6 @@ export default function Dashboard() {
   const supabase = createClientComponentClient()
   const router = useRouter()
 
-  // The Prism Gradient for inline styles
   const prismGradient = {
     background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
   }
@@ -207,8 +208,23 @@ export default function Dashboard() {
     router.push('/')
   }
 
-  const handleManageSubscription = () => {
-    router.push('/pricing') 
+  // UPDATED: Manage Subscription now calls Stripe Portal
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true)
+    try {
+      const res = await fetch('/api/create-portal-session', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Could not access billing portal.')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Error loading billing portal.')
+    } finally {
+      setLoadingPortal(false)
+    }
   }
 
   const saveCurrentChat = () => {
@@ -550,7 +566,7 @@ export default function Dashboard() {
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
 
-            {/* NEW CHAT BUTTON: "Empty button with gradient border" */}
+            {/* NEW CHAT BUTTON: Gradient Outline */}
             <button
               onClick={startNewChat}
               className="group relative w-full rounded-xl overflow-hidden mb-4 shadow-sm"
@@ -607,9 +623,10 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={handleManageSubscription}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 py-2 rounded-lg transition-all"
+                disabled={loadingPortal}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 py-2 rounded-lg transition-all disabled:opacity-50"
               >
-                Manage
+                {loadingPortal ? '...' : 'Manage'}
               </button>
               <button 
                 onClick={handleSignOut}
@@ -652,7 +669,6 @@ export default function Dashboard() {
               >
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    {/* Bot Avatar Gradient */}
                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0" style={prismGradient}>
                       LM
                     </div>
@@ -718,14 +734,17 @@ export default function Dashboard() {
                 disabled={isLoading}
               />
 
-              {/* SEND BUTTON: Solid Gradient */}
+              {/* SEND BUTTON: Gradient Outline */}
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="px-5 py-3.5 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
-                style={prismGradient}
+                className="group relative rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                style={{ width: '72px', height: '48px' }} 
               >
-                Send
+                <div className="absolute inset-0" style={prismGradient}></div>
+                <div className="relative m-[2px] bg-white text-slate-800 hover:bg-slate-50 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
+                  Send
+                </div>
               </button>
             </div>
             <div className="text-center mt-2">
