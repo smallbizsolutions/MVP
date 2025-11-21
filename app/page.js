@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background (Fixed: No Scroll Jitter) ---
+// --- Particle Background ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -15,16 +15,7 @@ const ParticleBackground = () => {
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
-    // The 5 Card Colors + Brand Blue
-    const colors = [
-      '#d97706', // Amber
-      '#be123c', // Rose
-      '#16a34a', // Green
-      '#0284c7', // Sky
-      '#4338ca', // Indigo
-      '#4F759B'  // Brand Blue
-    ]
-
+    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
     const particleCount = 60 
     const connectionDistance = 100 
     const mouseDistance = 150
@@ -32,7 +23,6 @@ const ParticleBackground = () => {
 
     let mouse = { x: null, y: null }
 
-    // FIX: Initialize particles ONLY ONCE, not on every resize
     function initParticles() {
       particles.length = 0
       for (let i = 0; i < particleCount; i++) {
@@ -42,7 +32,6 @@ const ParticleBackground = () => {
 
     const handleResize = () => {
       if (canvas.parentElement) {
-        // Just update dimensions, don't kill the particles
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
       }
@@ -61,7 +50,6 @@ const ParticleBackground = () => {
 
     class Particle {
       constructor() {
-        // Randomize initial position
         this.x = Math.random() * (canvas.width || window.innerWidth)
         this.y = Math.random() * (canvas.height || window.innerHeight)
         this.vx = (Math.random() - 0.5) * 0.5
@@ -73,8 +61,6 @@ const ParticleBackground = () => {
       update() {
         this.x += this.vx
         this.y += this.vy
-
-        // Bounce off edges (Dynamic based on current canvas size)
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1
 
@@ -86,10 +72,8 @@ const ParticleBackground = () => {
             const forceDirectionX = dx / distance
             const forceDirectionY = dy / distance
             const force = (mouseDistance - distance) / mouseDistance
-            const directionX = forceDirectionX * force * 0.6
-            const directionY = forceDirectionY * force * 0.6
-            this.x -= directionX
-            this.y -= directionY
+            this.x -= (forceDirectionX * force * 0.6)
+            this.y -= (forceDirectionY * force * 0.6)
           }
         }
       }
@@ -111,22 +95,18 @@ const ParticleBackground = () => {
           let dx = particles[i].x - particles[j].x
           let dy = particles[i].y - particles[j].y
           let distance = Math.sqrt(dx * dx + dy * dy)
-          
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
             ctx.globalAlpha = opacity * 0.4 
-            
             const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
             gradient.addColorStop(0, particles[i].color)
             gradient.addColorStop(1, particles[j].color)
-            
             ctx.strokeStyle = gradient
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
-            
             ctx.globalAlpha = 1.0
           }
         }
@@ -134,10 +114,9 @@ const ParticleBackground = () => {
       animationFrameId = requestAnimationFrame(animate)
     }
 
-    // Sequence matters:
-    handleResize() // 1. Set Size
-    initParticles() // 2. Create Dots
-    animate() // 3. Start Moving
+    handleResize()
+    initParticles()
+    animate()
 
     window.addEventListener('resize', handleResize)
     canvas.addEventListener('mousemove', handleMouseMove)
@@ -174,6 +153,11 @@ export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
+  // Prism Gradient for Inline Styles
+  const prismGradient = {
+    background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -186,7 +170,6 @@ export default function Home() {
     try {
       if (view === 'signup') {
         const productionUrl = 'https://no-rap-production.up.railway.app'
-        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -269,7 +252,7 @@ export default function Home() {
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
               </h1>
-              <div className="h-1.5 w-full bg-[#4F759B] rounded-full opacity-90"></div>
+              <div className="h-1.5 w-full rounded-full opacity-90" style={prismGradient}></div>
             </div>
             <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               Michigan Restaurant Compliance
@@ -278,9 +261,10 @@ export default function Home() {
           
           <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
+              {/* Timeline Line */}
               <div 
-                className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#4F759B] to-slate-300 rounded-full transition-all duration-[1500ms] ease-out"
-                style={{ height: mounted ? '95%' : '0%' }}
+                className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out"
+                style={{ ...prismGradient, height: mounted ? '95%' : '0%' }}
               ></div>
 
               <div className="space-y-4">
@@ -353,13 +337,14 @@ export default function Home() {
           </div>
         </div>
 
+        {/* RIGHT SIDE - Auth Form */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-                <div className="h-1.5 w-full bg-[#4F759B] rounded-full"></div>
+                <div className="h-1.5 w-full rounded-full" style={prismGradient}></div>
               </div>
             </div>
 
@@ -372,27 +357,33 @@ export default function Home() {
               </p>
             </div>
 
+            {/* TOGGLE: Replaced with Gradient Border Style */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
+                {/* Sign Up Toggle Button */}
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    view === 'signup' 
-                      ? 'bg-white text-[#4F759B] shadow-sm border border-slate-200' 
-                      : 'text-slate-500 hover:text-slate-900 bg-transparent'
-                  }`}
+                  className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'signup' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
                 >
-                  Sign up
+                  {view === 'signup' && (
+                    <div className="absolute inset-0 rounded-lg p-[2px]" style={prismGradient}>
+                      <div className="h-full w-full bg-white rounded-[6px]"></div>
+                    </div>
+                  )}
+                  <span className={`relative z-10 ${view === 'signup' ? 'text-slate-900' : 'text-slate-500'}`}>Sign up</span>
                 </button>
+
+                {/* Sign In Toggle Button */}
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    view === 'login' 
-                      ? 'bg-white text-[#4F759B] shadow-sm border border-slate-200' 
-                      : 'text-slate-500 hover:text-slate-900 bg-transparent'
-                  }`}
+                  className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'login' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
                 >
-                  Sign in
+                  {view === 'login' && (
+                    <div className="absolute inset-0 rounded-lg p-[2px]" style={prismGradient}>
+                      <div className="h-full w-full bg-white rounded-[6px]"></div>
+                    </div>
+                  )}
+                  <span className={`relative z-10 ${view === 'login' ? 'text-slate-900' : 'text-slate-500'}`}>Sign in</span>
                 </button>
               </div>
             </div>
@@ -405,7 +396,7 @@ export default function Home() {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#4F759B] focus:ring-4 focus:ring-[#4F759B]/20 focus:outline-none text-slate-900 transition text-sm" 
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
                   placeholder="you@restaurant.com" 
                 />
               </div>
@@ -417,21 +408,23 @@ export default function Home() {
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                   minLength={6} 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-[#4F759B] focus:ring-4 focus:ring-[#4F759B]/20 focus:outline-none text-slate-900 transition text-sm" 
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
                   placeholder="••••••••" 
                 />
               </div>
               
+              {/* Primary Button: Solid Gradient Fill */}
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
+                className="w-full text-white font-bold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
+                style={prismGradient}
               >
                 {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
               </button>
 
               {message && (
-                <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-[#4F759B] text-[#4F759B]'}`}>
+                <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-slate-200 text-slate-600'}`}>
                   {message.text}
                 </div>
               )}
@@ -443,7 +436,7 @@ export default function Home() {
                 
                 <button 
                   onClick={() => router.push('/pricing')} 
-                  className="w-full bg-white border-2 border-slate-200 hover:border-[#4F759B] text-slate-700 hover:text-[#4F759B] font-bold py-3 rounded-xl transition-all duration-300 text-sm"
+                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all duration-300 text-sm"
                 >
                   View pricing plans
                 </button>
