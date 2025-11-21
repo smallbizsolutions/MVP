@@ -61,7 +61,6 @@ const COUNTY_NAMES = {
   oakland: 'Oakland County'
 }
 
-// FIX #18: Max image size constant
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
 
 export default function Dashboard() {
@@ -69,7 +68,6 @@ export default function Dashboard() {
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   const [userCounty, setUserCounty] = useState('washtenaw')
   const [showCountySelector, setShowCountySelector] = useState(false)
-  // FIX #6: Add loading state for county update
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   
   const [messages, setMessages] = useState([])
@@ -78,7 +76,6 @@ export default function Dashboard() {
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  // FIX #15: Add rate limiting state
   const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sidebarView, setSidebarView] = useState('documents')
@@ -89,7 +86,6 @@ export default function Dashboard() {
   const supabase = createClientComponentClient()
   const router = useRouter()
 
-  // INITIAL MESSAGE
   useEffect(() => {
     if (userCounty && messages.length === 0) {
       setMessages([
@@ -102,7 +98,6 @@ export default function Dashboard() {
     }
   }, [userCounty])
 
-  // FIX #16: Load chat history with size checking
   useEffect(() => {
     if (session) {
       const stored = localStorage.getItem(`chat_history_${session.user.id}`)
@@ -112,14 +107,12 @@ export default function Dashboard() {
           setChatHistory(parsed)
         } catch (e) {
           console.error('Failed to parse saved history:', e)
-          // Clear corrupted history
           localStorage.removeItem(`chat_history_${session.user.id}`)
         }
       }
     }
   }, [session])
 
-  // FIX #16: Save chat with size limit
   const saveCurrentChat = () => {
     if (!session || messages.length <= 1) return
 
@@ -145,7 +138,6 @@ export default function Dashboard() {
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
         console.warn('⚠️ Storage quota exceeded, removing old chats')
-        // Keep only 25 most recent chats
         newHistory = newHistory.slice(0, 25)
         try {
           localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
@@ -231,7 +223,6 @@ export default function Dashboard() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // FIX #6: Add loading state to county change
   const handleCountyChange = async (newCounty) => {
     setIsUpdatingCounty(true)
     
@@ -315,13 +306,11 @@ export default function Dashboard() {
     )
   }
 
-  // FIX #15: Add rate limiting to send message
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim() && !image) return
-    if (!canSend) return // Rate limit check
+    if (!canSend) return
 
-    // Disable sending temporarily
     setCanSend(false)
 
     const userMessage = { role: 'user', content: input, image, citations: [] }
@@ -371,20 +360,17 @@ export default function Dashboard() {
       setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
     } finally {
       setIsLoading(false)
-      // Re-enable sending after 1 second
       setTimeout(() => setCanSend(true), 1000)
     }
   }
 
-  // FIX #18: Add image size validation
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
     
-    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
       alert('Image too large. Please use images under 5MB.')
-      e.target.value = '' // Clear the input
+      e.target.value = ''
       return
     }
     
@@ -393,11 +379,9 @@ export default function Dashboard() {
     reader.readAsDataURL(file)
   }
 
-  // FIX #5: Cleanup PDF viewer on unmount
   useEffect(() => {
     return () => {
       if (viewingPdf) {
-        // Cleanup if needed
         setViewingPdf(null)
       }
     }
@@ -408,9 +392,8 @@ export default function Dashboard() {
   const currentDocuments = COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS['washtenaw']
 
   return (
-    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-white text-slate-900 overflow-hidden">
 
-      {/* COUNTY SELECTOR MODAL */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
@@ -441,7 +424,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* PDF VIEWER */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
           <div className="p-4 border-b flex justify-between items-center bg-white">
@@ -551,10 +533,10 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col h-full bg-white relative">
+      {/* MAIN CHAT AREA - FIXED HEIGHT */}
+      <div className="flex-1 flex flex-col bg-white relative" style={{ height: '100vh', maxHeight: '100vh' }}>
 
-        <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30">
+        <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <div>
             <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
             <div className="text-xs text-slate-400">{COUNTY_NAMES[userCounty]}</div>
@@ -564,7 +546,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6" style={{ minHeight: 0 }}>
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -595,7 +577,7 @@ export default function Dashboard() {
 
         <form
           onSubmit={handleSendMessage}
-          className="p-4 md:p-6 border-t border-slate-100 bg-white"
+          className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
         >
           <div className="max-w-4xl mx-auto relative flex items-center gap-3">
             <input
@@ -609,7 +591,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
-              className={`p-3 rounded-xl transition-all ${
+              className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                 image 
                   ? 'bg-[#4F759B] text-white shadow-md' 
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -628,7 +610,7 @@ export default function Dashboard() {
             <button
               type="submit"
               disabled={isLoading || !canSend}
-              className="px-6 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm"
+              className="px-6 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
             >
               {isLoading ? '...' : 'Send'}
             </button>
