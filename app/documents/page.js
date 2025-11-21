@@ -4,6 +4,140 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
+// --- 1. Particle Background Component (Same as Landing Page) ---
+const ParticleBackground = () => {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    const ctx = canvas.getContext('2d')
+    let animationFrameId
+
+    // Config - fewer particles since sidebar is narrower
+    const particleCount = 30 
+    const connectionDistance = 80
+    const mouseDistance = 120
+    const particles = []
+
+    let mouse = { x: null, y: null }
+
+    const handleResize = () => {
+      if (canvas.parentElement) {
+        canvas.width = canvas.parentElement.offsetWidth
+        canvas.height = canvas.parentElement.offsetHeight
+        initParticles()
+      }
+    }
+
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = event.clientX - rect.left
+      mouse.y = event.clientY - rect.top
+    }
+
+    const handleMouseLeave = () => {
+      mouse.x = null
+      mouse.y = null
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width
+        this.y = Math.random() * canvas.height
+        this.vx = (Math.random() - 0.5) * 0.5
+        this.vy = (Math.random() - 0.5) * 0.5
+        this.size = Math.random() * 2 + 1
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1
+
+        if (mouse.x != null) {
+          let dx = mouse.x - this.x
+          let dy = mouse.y - this.y
+          let distance = Math.sqrt(dx * dx + dy * dy)
+          if (distance < mouseDistance) {
+            const forceDirectionX = dx / distance
+            const forceDirectionY = dy / distance
+            const force = (mouseDistance - distance) / mouseDistance
+            const directionX = forceDirectionX * force * 0.6
+            const directionY = forceDirectionY * force * 0.6
+            this.x -= directionX
+            this.y -= directionY
+          }
+        }
+      }
+
+      draw() {
+        ctx.fillStyle = '#4F759B'
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    function initParticles() {
+      particles.length = 0
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle())
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update()
+        particles[i].draw()
+        for (let j = i; j < particles.length; j++) {
+          let dx = particles[i].x - particles[j].x
+          let dy = particles[i].y - particles[j].y
+          let distance = Math.sqrt(dx * dx + dy * dy)
+          if (distance < connectionDistance) {
+            let opacity = 1 - (distance / connectionDistance)
+            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})`
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mouseleave', handleMouseLeave)
+    animate()
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove)
+        canvas.removeEventListener('mouseleave', handleMouseLeave)
+      }
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [])
+
+  return (
+    <canvas 
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-60"
+    />
+  )
+}
+
+// --- Main Dashboard Component ---
+
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -376,69 +510,77 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-900 text-white flex flex-col z-40`}>
-        <div className="p-6 flex-shrink-0 border-b border-slate-800">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1"></div>
+      {/* SIDEBAR (Updated to Light Theme + Particles) */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
+        
+        {/* Particle Background Layer */}
+        <ParticleBackground />
+        
+        {/* Sidebar Content (z-10 to sit above particles) */}
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="p-6 flex-shrink-0 border-b border-slate-200/60 bg-slate-50/80 backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></h1>
+                <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1 opacity-90"></div>
+              </div>
+              <button className="md:hidden text-slate-400 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
-            <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
+
+            <button
+              onClick={() => setShowCountySelector(true)}
+              className="w-full bg-white hover:bg-slate-50 text-slate-700 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-200 shadow-sm"
+            >
+              <span className="text-sm font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
+              <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+
+            <button
+              className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+              onClick={startNewChat}
+            >
+              <span>+</span> New Chat
+            </button>
           </div>
 
-          <button
-            onClick={() => setShowCountySelector(true)}
-            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-700"
-          >
-            <span className="text-sm font-medium truncate">{COUNTY_NAMES[userCounty]}</span>
-            <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-          </button>
+          <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+            {chatHistory.length === 0 && (
+              <p className="text-slate-400 text-sm text-center mt-4">No chat history yet.</p>
+            )}
 
-          <button
-            className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
-            onClick={startNewChat}
-          >
-            <span>+</span> New Chat
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
-          {chatHistory.length === 0 && (
-            <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
-          )}
-
-          {chatHistory.map(chat => (
-            <div
-              key={chat.id}
-              onClick={() => loadChat(chat)}
-              className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
-            >
-              <div className="flex justify-between items-start">
-                <p className="font-medium text-sm text-slate-200 truncate pr-2 flex-1">{chat.title}</p>
-                <button
-                  onClick={(e) => deleteChat(chat.id, e)}
-                  className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                >
-                  ✕
-                </button>
+            {chatHistory.map(chat => (
+              <div
+                key={chat.id}
+                onClick={() => loadChat(chat)}
+                className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-[#4F759B] rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
+              >
+                <div className="flex justify-between items-start">
+                  <p className="font-medium text-sm text-slate-700 truncate pr-2 flex-1">{chat.title}</p>
+                  <button
+                    onClick={(e) => deleteChat(chat.id, e)}
+                    className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {new Date(chat.timestamp).toLocaleDateString()}
+                </p>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {new Date(chat.timestamp).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
 
-        <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
-          <button onClick={() => setIsSidebarOpen(true)} className="text-white">
+        <div className="md:hidden p-4 bg-slate-50 border-b border-slate-200 text-slate-900 flex justify-between items-center shadow-sm z-30 flex-shrink-0">
+          <button onClick={() => setIsSidebarOpen(true)} className="text-slate-700">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="text-center flex-1 mx-4 min-w-0">
-            <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
-            <div className="text-xs text-slate-400 truncate">{COUNTY_NAMES[userCounty]}</div>
+            <span className="font-bold text-lg text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></span>
+            <div className="text-xs text-slate-500 truncate">{COUNTY_NAMES[userCounty]}</div>
           </div>
           <div className="w-6"></div>
         </div>
