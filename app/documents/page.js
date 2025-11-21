@@ -39,7 +39,7 @@ export default function Dashboard() {
       setMessages([
         { 
           role: 'assistant', 
-          content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question about your local food safety regulations. I'll cite specific documents and pages in my responses.`,
+          content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question.`,
           citations: []
         }
       ])
@@ -51,10 +51,8 @@ export default function Dashboard() {
       const stored = localStorage.getItem(`chat_history_${session.user.id}`)
       if (stored) {
         try {
-          const parsed = JSON.parse(stored)
-          setChatHistory(parsed)
+          setChatHistory(JSON.parse(stored))
         } catch (e) {
-          console.error('Failed to parse saved history:', e)
           localStorage.removeItem(`chat_history_${session.user.id}`)
         }
       }
@@ -85,15 +83,12 @@ export default function Dashboard() {
       setCurrentChatId(chat.id)
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
-        console.warn('⚠️ Storage quota exceeded, removing old chats')
         newHistory = newHistory.slice(0, 25)
         try {
           localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
           setChatHistory(newHistory)
           setCurrentChatId(chat.id)
-        } catch (retryError) {
-          console.error('Failed to save even after cleanup:', retryError)
-        }
+        } catch (retryError) {}
       }
     }
   }
@@ -110,7 +105,7 @@ export default function Dashboard() {
     setMessages([
       { 
         role: 'assistant',
-        content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question about your local food safety regulations.`,
+        content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
     ])
@@ -123,7 +118,6 @@ export default function Dashboard() {
     const newHistory = chatHistory.filter(c => c.id !== chatId)
     setChatHistory(newHistory)
     localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
-
     if (currentChatId === chatId) startNewChat()
   }
 
@@ -192,7 +186,7 @@ export default function Dashboard() {
     setMessages([
       { 
         role: 'assistant',
-        content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_NAMES[newCounty]}-specific documents.`,
+        content: `County updated to ${COUNTY_NAMES[newCounty]}.`,
         citations: []
       }
     ])
@@ -327,18 +321,10 @@ export default function Dashboard() {
     reader.readAsDataURL(file)
   }
 
-  useEffect(() => {
-    return () => {
-      if (viewingPdf) {
-        setViewingPdf(null)
-      }
-    }
-  }, [viewingPdf])
-
   if (!session) return null
 
   return (
-    <div className="fixed inset-0 flex bg-white text-slate-900">
+    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
 
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -358,14 +344,11 @@ export default function Dashboard() {
                 key={key}
                 onClick={() => handleCountyChange(key)}
                 disabled={isUpdatingCounty}
-                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium disabled:opacity-50"
               >
                 {name}
               </button>
             ))}
-            {isUpdatingCounty && (
-              <p className="text-center text-sm text-slate-500 mt-4">Updating...</p>
-            )}
           </div>
         </div>
       )}
@@ -376,7 +359,7 @@ export default function Dashboard() {
             <div>
               <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
               <p className="text-xs text-slate-500 font-medium">
-                {viewingPdf.targetPage && `Starting at Page ${viewingPdf.targetPage}`}
+                {viewingPdf.targetPage && `Page ${viewingPdf.targetPage}`}
               </p>
             </div>
             <button 
@@ -393,8 +376,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col z-40`}>
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-900 text-white flex flex-col z-40`}>
         <div className="p-6 flex-shrink-0 border-b border-slate-800">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -409,7 +391,7 @@ export default function Dashboard() {
             className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-700"
           >
             <span className="text-sm font-medium truncate">{COUNTY_NAMES[userCounty]}</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
           <button
@@ -432,10 +414,10 @@ export default function Dashboard() {
               className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
             >
               <div className="flex justify-between items-start">
-                <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
+                <p className="font-medium text-sm text-slate-200 truncate pr-2 flex-1">{chat.title}</p>
                 <button
                   onClick={(e) => deleteChat(chat.id, e)}
-                  className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all"
+                  className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                 >
                   ✕
                 </button>
@@ -448,22 +430,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* MAIN CHAT - Fixed height container */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
 
-        {/* Mobile header */}
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <button onClick={() => setIsSidebarOpen(true)} className="text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <div className="text-center">
+          <div className="text-center flex-1 mx-4 min-w-0">
             <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
-            <div className="text-xs text-slate-400">{COUNTY_NAMES[userCounty]}</div>
+            <div className="text-xs text-slate-400 truncate">{COUNTY_NAMES[userCounty]}</div>
           </div>
           <div className="w-6"></div>
         </div>
 
-        {/* Messages - Scrollable */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
@@ -471,7 +450,7 @@ export default function Dashboard() {
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm ${
+                className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
                     : 'bg-[#4F759B] text-white'
@@ -479,7 +458,7 @@ export default function Dashboard() {
               >
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold">
+                    <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">
                       LM
                     </div>
                     <span className="font-semibold text-xs text-slate-500">protocolLM</span>
@@ -512,7 +491,6 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input - Always visible at bottom */}
         <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
             <div className="flex items-end gap-2 md:gap-3">
