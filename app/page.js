@@ -334,13 +334,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer */}
           <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             © 2025 protocolLM. All rights reserved.
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
@@ -360,7 +358,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* TOGGLE with Gradient Outline */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
                 <button 
@@ -395,4 +392,59 @@ export default function Home() {
                 <input 
                   type="email" 
                   value={email} 
-                  onChange={(e) => setEmail(e.
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
+                  placeholder="you@restaurant.com" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
+                <input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  minLength={6} 
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
+                  placeholder="••••••••" 
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="group relative w-full rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ height: '56px' }}
+              >
+                <div className="absolute inset-0" style={prismGradient}></div>
+                <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
+                  {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
+                </div>
+              </button>
+
+              {message && (
+                <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-slate-200 text-slate-600'}`}>
+                  {message.text}
+                </div>
+              )}
+            </form>
+
+            {view === 'signup' && (
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <p className="text-center text-xs text-slate-600 mb-3 font-medium">30-day free trial • From $49/month</p>
+                
+                <button 
+                  onClick={() => router.push('/pricing')} 
+                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all duration-300 text-sm"
+                >
+                  View pricing plans
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
