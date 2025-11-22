@@ -151,7 +151,7 @@ const COUNTY_NAMES = {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-export default function Dashboard() {
+export default function DocumentsPage() {
   const [session, setSession] = useState(null)
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   const [userCounty, setUserCounty] = useState('washtenaw')
@@ -439,7 +439,6 @@ export default function Dashboard() {
         })
       })
 
-      // FIX: Check response status BEFORE parsing JSON
       if (!response.ok) {
         const errorText = await response.text()
         let errorMessage
@@ -470,7 +469,6 @@ export default function Dashboard() {
       setTimeout(saveCurrentChat, 200)
     } catch (err) {
       console.error('Chat error:', err)
-      // FIX: Display the error in the chat bubble
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: `❌ Error: ${err.message}\n\nPlease try again or contact support if this persists.`,
@@ -743,13 +741,9 @@ export default function Dashboard() {
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="group relative rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                style={{ width: '72px', height: '48px' }} 
+                className="h-[48px] px-4 text-slate-900 font-bold hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
-                <div className="absolute inset-0" style={prismGradient}></div>
-                <div className="relative m-[2px] bg-white text-slate-800 hover:bg-slate-50 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
-                  Send
-                </div>
+                Send
               </button>
             </div>
             <div className="text-center mt-2">
