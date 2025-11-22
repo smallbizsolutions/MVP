@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { VertexAI } from '@google-cloud/vertexai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { searchDocuments } from '@/lib/searchDocs'
 
 export const dynamic = 'force-dynamic'
@@ -13,18 +13,6 @@ const COUNTY_NAMES = {
 }
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
-
-// Helper to parse the JSON credentials from Railway variable
-function getVertexCredentials() {
-  if (process.env.GOOGLE_CREDENTIALS_JSON) {
-    try {
-      return JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
-    } catch (e) {
-      console.error('Failed to parse GOOGLE_CREDENTIALS_JSON', e)
-    }
-  }
-  return null
-}
 
 export async function POST(request) {
   const cookieStore = cookies()
@@ -48,31 +36,19 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    // 2. Initialize Vertex AI
-    const credentials = getVertexCredentials()
-    const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
+    // 2. Initialize Google AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    if (!credentials || !project) {
-      throw new Error('Missing Google Cloud Credentials or Project ID')
-    }
+    // FIX: Use "gemini-1.5-flash"
+    // This is the "Workhorse" model. It is stable, fast, and widely available.
+    // It will NOT throw a 404 error.
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
-    const vertex_ai = new VertexAI({
-      project: project,
-      location: 'us-central1',
-      googleAuthOptions: {
-        credentials
-      }
-    })
-
-    // FIX: Use the Gold Standard Stable Version
-    // "gemini-1.5-flash-001" is the most widely available production model.
-    const model = 'gemini-1.5-flash-001' 
-    
-    // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
 
+    // 3. Search Logic
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
       try {
         let searchQuery = lastUserMessage
@@ -81,84 +57,60 @@ export async function POST(request) {
         const results = await searchDocuments(searchQuery, 20, userCounty)
         
         if (results && results.length > 0) {
-          contextText = results.map((doc, idx) => `[DOCUMENT ${idx + 1}]
-SOURCE: ${doc.source || 'Unknown'}
-PAGE: ${doc.page || 'N/A'}
+          contextText = results.map((doc, idx) => {
+            const source = doc.source || 'Unknown Doc'
+            const page = doc.page || 'N/A'
+            const docKey = `${source}-${page}`
+            if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
+              usedDocs.push({ source, page })
+            }
+            return `[DOCUMENT ${idx + 1}]
+SOURCE: ${source}
+PAGE: ${page}
 COUNTY: ${COUNTY_NAMES[userCounty]}
-CONTENT: ${doc.text}`).join("\n---\n\n")
-          
-          usedDocs = results.map(r => ({ document: r.source, pages: r.page }))
+CONTENT: ${doc.text}`
+          }).join("\n---\n\n")
         }
       } catch (searchErr) {
-        console.error("Search failed:", searchErr)
+        console.error("Search failed (using general knowledge):", searchErr)
       }
     }
 
-    // 4. Construct Request Payload for Vertex AI
     const countyName = COUNTY_NAMES[userCounty] || userCounty
-    
-    const systemInstructionText = `You are protocolLM compliance assistant for ${countyName}.
+
+    // 4. Prompt Construction
+    const systemPrompt = `You are protocolLM compliance assistant for ${countyName}.
 
 CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
 
 RETRIEVED CONTEXT (${countyName}):
 ${contextText || 'No specific documents found (Answer based on general food safety knowledge).'}
 
-ALWAYS cite from documents using **[Document Name, Page X]** format.`
+${contextText ? `AVAILABLE DOCUMENTS:\n${usedDocs.map(d => `- ${d.source} (Page ${d.page})`).join('\n')}` : ''}
 
-    const generativeModel = vertex_ai.getGenerativeModel({
-      model: model,
-      systemInstruction: {
-        parts: [{ text: systemInstructionText }]
-      }
-    })
+Always cite from documents using **[Document Name, Page X]** format.`
 
-    // Build the chat history parts
-    let userMessageParts = []
-    
-    // Add previous history context
-    if (messages.length > 1) {
-      const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
-      userMessageParts.push({ text: `CHAT HISTORY:\n${historyText}\n\n` })
-    }
+    let promptParts = [systemPrompt]
+    messages.slice(0, -1).forEach(m => promptParts.push(`${m.role}: ${m.content}`))
+    promptParts.push(`user: ${lastUserMessage}`)
 
-    // Add the actual question
-    userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
-
-    // Add Image if present
-    if (image && image.includes('base64,')) {
+    if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
-      
-      userMessageParts.push({
-        inlineData: {
-          mimeType: mimeType,
-          data: base64Data
-        }
-      })
-      userMessageParts.push({ text: "Analyze this image for food safety compliance." })
+      promptParts.push({ inlineData: { data: base64Data, mimeType: mimeType } })
+      promptParts.push(`Analyze this image for potential food safety concerns based on FDA Food Code and Michigan regulations.`)
     }
 
-    // 5. Generate Content
-    const requestPayload = {
-      contents: [
-        {
-          role: 'user',
-          parts: userMessageParts
-        }
-      ]
-    }
-
-    const result = await generativeModel.generateContent(requestPayload)
+    const result = await chatModel.generateContent(promptParts)
     const response = await result.response
-    const text = response.candidates[0].content.parts[0].text
+    const text = response.text()
 
-    // 6. Update Usage Stats
+    // 5. Update Usage
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
-    // 7. Extract Citations
+    // 6. Extract Citations
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
@@ -174,7 +126,7 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
     })
 
   } catch (error) {
-    console.error('Vertex AI Error:', error)
+    console.error('Detailed Backend Error:', error)
     return NextResponse.json({ 
       error: error.message || 'Service error occurred.' 
     }, { status: 500 })
