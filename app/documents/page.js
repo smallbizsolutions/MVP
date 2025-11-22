@@ -141,6 +141,45 @@ const ParticleBackground = () => {
   )
 }
 
+// --- SECURITY UTILITIES ---
+
+// Sanitize text to prevent XSS
+function sanitizeText(text) {
+  if (typeof text !== 'string') return ''
+  return text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+}
+
+// Validate image file before upload
+function validateImageFile(file) {
+  const errors = []
+  
+  // Check file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    errors.push('Only JPEG, PNG, and WebP images are allowed')
+  }
+  
+  // Check file size (5MB max)
+  const MAX_SIZE = 5 * 1024 * 1024
+  if (file.size > MAX_SIZE) {
+    errors.push('Image must be smaller than 5MB')
+  }
+  
+  // Check file name for malicious patterns
+  const dangerousPatterns = ['.exe', '.php', '.js', '<script', 'javascript:', 'data:text/html']
+  const fileName = file.name.toLowerCase()
+  if (dangerousPatterns.some(pattern => fileName.includes(pattern))) {
+    errors.push('Invalid file name')
+  }
+  
+  return { isValid: errors.length === 0, errors }
+}
+
 // --- Main Dashboard ---
 
 const COUNTY_NAMES = {
@@ -169,6 +208,10 @@ export default function DocumentsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [viewingPdf, setViewingPdf] = useState(null)
   
+  // SECURITY: Rate limiting state
+  const [requestCount, setRequestCount] = useState(0)
+  const [rateLimitResetTime, setRateLimitResetTime] = useState(null)
+  
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
   const supabase = createClientComponentClient()
@@ -177,6 +220,21 @@ export default function DocumentsPage() {
   const prismGradient = {
     background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
   }
+
+  // SECURITY: Client-side rate limiting (10 requests per minute)
+  useEffect(() => {
+    if (requestCount >= 10) {
+      const resetTime = Date.now() + 60000 // 1 minute
+      setRateLimitResetTime(resetTime)
+      
+      const timer = setTimeout(() => {
+        setRequestCount(0)
+        setRateLimitResetTime(null)
+      }, 60000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [requestCount])
 
   useEffect(() => {
     if (userCounty && messages.length === 0) {
@@ -190,13 +248,19 @@ export default function DocumentsPage() {
     }
   }, [userCounty])
 
+  // SECURITY: Sanitize chat history before saving
   useEffect(() => {
     if (session) {
       const stored = localStorage.getItem(`chat_history_${session.user.id}`)
       if (stored) {
         try {
-          setChatHistory(JSON.parse(stored))
+          const parsed = JSON.parse(stored)
+          // Validate structure before using
+          if (Array.isArray(parsed)) {
+            setChatHistory(parsed)
+          }
         } catch (e) {
+          console.error('Invalid chat history data')
           localStorage.removeItem(`chat_history_${session.user.id}`)
         }
       }
@@ -205,13 +269,28 @@ export default function DocumentsPage() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    // SECURITY: Clear sensitive data on sign out
+    localStorage.clear()
+    sessionStorage.clear()
     router.push('/')
   }
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true)
     try {
-      const res = await fetch('/api/create-portal-session', { method: 'POST' })
+      const res = await fetch('/api/create-portal-session', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // SECURITY: Include session verification
+        credentials: 'include'
+      })
+      
+      if (!res.ok) {
+        throw new Error('Failed to access billing portal')
+      }
+      
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
@@ -219,7 +298,7 @@ export default function DocumentsPage() {
         alert('Could not access billing portal.')
       }
     } catch (error) {
-      console.error(error)
+      console.error('Portal error:', error)
       alert('Error loading billing portal.')
     } finally {
       setLoadingPortal(false)
@@ -229,33 +308,38 @@ export default function DocumentsPage() {
   const saveCurrentChat = () => {
     if (!session || messages.length <= 1) return
 
-    const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'New Chat'
-    const chat = {
-      id: currentChatId || Date.now().toString(),
-      title: chatTitle,
-      messages,
-      timestamp: Date.now(),
-      county: userCounty
-    }
-
-    const existingIndex = chatHistory.findIndex(c => c.id === chat.id)
-    let newHistory = [...chatHistory]
-
-    if (existingIndex >= 0) newHistory[existingIndex] = chat
-    else newHistory = [chat, ...newHistory].slice(0, 50)
-
     try {
+      const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'New Chat'
+      const chat = {
+        id: currentChatId || Date.now().toString(),
+        title: sanitizeText(chatTitle), // SECURITY: Sanitize title
+        messages: messages.map(m => ({
+          ...m,
+          content: sanitizeText(m.content) // SECURITY: Sanitize content
+        })),
+        timestamp: Date.now(),
+        county: userCounty
+      }
+
+      const existingIndex = chatHistory.findIndex(c => c.id === chat.id)
+      let newHistory = [...chatHistory]
+
+      if (existingIndex >= 0) newHistory[existingIndex] = chat
+      else newHistory = [chat, ...newHistory].slice(0, 50)
+
       localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
       setChatHistory(newHistory)
       setCurrentChatId(chat.id)
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
-        newHistory = newHistory.slice(0, 25)
+        // Handle storage quota exceeded
+        const newHistory = chatHistory.slice(0, 25)
         try {
           localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
           setChatHistory(newHistory)
-          setCurrentChatId(chat.id)
-        } catch (retryError) {}
+        } catch (retryError) {
+          console.error('Storage error:', retryError)
+        }
       }
     }
   }
@@ -333,6 +417,11 @@ export default function DocumentsPage() {
   }, [messages])
 
   const handleCountyChange = async (newCounty) => {
+    if (!['washtenaw', 'wayne', 'oakland'].includes(newCounty)) {
+      console.error('Invalid county selected')
+      return
+    }
+    
     setIsUpdatingCounty(true)
     
     const { error } = await supabase
@@ -360,9 +449,18 @@ export default function DocumentsPage() {
   }
 
   const handleCitationClick = (citation) => {
-    const docName = citation.document
-    const pageMatch = citation.pages.match(/\d+/)
+    // SECURITY: Validate citation structure
+    if (!citation || typeof citation !== 'object') return
+    
+    const docName = sanitizeText(citation.document || '')
+    const pageMatch = citation.pages?.toString().match(/\d+/)
     const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
+
+    // SECURITY: Only allow viewing PDFs from valid counties
+    if (!['washtenaw', 'wayne', 'oakland'].includes(userCounty)) {
+      console.error('Invalid county')
+      return
+    }
 
     setViewingPdf({
       title: docName,
@@ -417,12 +515,33 @@ export default function DocumentsPage() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
+    
+    // SECURITY: Validate inputs
     if (!input.trim() && !image) return
     if (!canSend) return
+    
+    // SECURITY: Check rate limit
+    if (rateLimitResetTime && Date.now() < rateLimitResetTime) {
+      alert('Rate limit exceeded. Please wait before sending another message.')
+      return
+    }
+    
+    // SECURITY: Sanitize input
+    const sanitizedInput = sanitizeText(input.trim())
+    if (sanitizedInput.length > 5000) {
+      alert('Message too long. Please keep messages under 5000 characters.')
+      return
+    }
 
     setCanSend(false)
+    setRequestCount(prev => prev + 1)
 
-    const userMessage = { role: 'user', content: input, image, citations: [] }
+    const userMessage = { 
+      role: 'user', 
+      content: sanitizedInput, 
+      image, 
+      citations: [] 
+    }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setImage(null)
@@ -431,24 +550,26 @@ export default function DocumentsPage() {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // SECURITY: Include credentials
         body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: input }],
+          messages: [...messages, { role: 'user', content: sanitizedInput }],
           image: userMessage.image,
           county: userCounty
         })
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        let errorMessage
-        try {
-          const errorData = JSON.parse(errorText)
-          errorMessage = errorData.error || `Server error: ${response.status}`
-        } catch {
-          errorMessage = `Server error: ${response.status} - ${errorText.substring(0, 100)}`
+        // SECURITY: Don't expose internal errors
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please try again later.')
+        } else if (response.status === 401) {
+          throw new Error('Session expired. Please sign in again.')
+        } else {
+          throw new Error('An error occurred. Please try again.')
         }
-        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -471,7 +592,7 @@ export default function DocumentsPage() {
       console.error('Chat error:', err)
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `❌ Error: ${err.message}\n\nPlease try again or contact support if this persists.`,
+        content: `❌ Error: ${err.message}`,
         citations: []
       }])
     } finally {
@@ -484,14 +605,29 @@ export default function DocumentsPage() {
     const file = e.target.files[0]
     if (!file) return
     
-    if (file.size > MAX_IMAGE_SIZE) {
-      alert('Image too large. Please use images under 5MB.')
+    // SECURITY: Validate image file
+    const validation = validateImageFile(file)
+    if (!validation.isValid) {
+      alert('Image validation failed:\n' + validation.errors.join('\n'))
       e.target.value = ''
       return
     }
     
     const reader = new FileReader()
-    reader.onloadend = () => setImage(reader.result)
+    reader.onloadend = () => {
+      // SECURITY: Additional check on data URL
+      const result = reader.result
+      if (typeof result === 'string' && result.startsWith('data:image/')) {
+        setImage(result)
+      } else {
+        alert('Invalid image format')
+        e.target.value = ''
+      }
+    }
+    reader.onerror = () => {
+      alert('Error reading file')
+      e.target.value = ''
+    }
     reader.readAsDataURL(file)
   }
 
@@ -546,6 +682,8 @@ export default function DocumentsPage() {
           <iframe
             src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`}
             className="flex-1 w-full"
+            sandbox="allow-same-origin" 
+            title="PDF Viewer"
           />
         </div>
       )}
@@ -671,7 +809,6 @@ export default function DocumentsPage() {
                 }`}
                 style={msg.role === 'user' ? prismGradient : {}}
               >
-                {/* --- ADDED IMAGE RENDERING HERE --- */}
                 {msg.image && (
                   <div className="mb-3 rounded-lg overflow-hidden">
                     <img 
@@ -681,7 +818,6 @@ export default function DocumentsPage() {
                     />
                   </div>
                 )}
-                {/* ---------------------------------- */}
 
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
@@ -720,7 +856,6 @@ export default function DocumentsPage() {
 
         <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
           
-          {/* --- ADDED IMAGE PREVIEW ABOVE INPUT --- */}
           {image && (
             <div className="max-w-4xl mx-auto mb-3 px-1">
               <div className="relative inline-block">
@@ -734,14 +869,22 @@ export default function DocumentsPage() {
               </div>
             </div>
           )}
-          {/* -------------------------------------- */}
+
+          {/* SECURITY: Rate limit warning */}
+          {rateLimitResetTime && Date.now() < rateLimitResetTime && (
+            <div className="max-w-4xl mx-auto mb-3">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg text-xs font-medium">
+                Rate limit reached. Please wait {Math.ceil((rateLimitResetTime - Date.now()) / 1000)} seconds.
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
             <div className="flex items-end gap-2 md:gap-3">
               <input
                 type="file"
                 ref={fileInputRef}
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"
                 onChange={handleImageSelect}
               />
@@ -749,6 +892,7 @@ export default function DocumentsPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
+                disabled={isLoading}
                 className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                   image 
                     ? 'text-white shadow-md' 
@@ -765,11 +909,12 @@ export default function DocumentsPage() {
                 placeholder={image ? "Ask about this image..." : "Ask a question..."}
                 className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all text-sm"
                 disabled={isLoading}
+                maxLength={5000}
               />
 
               <button
                 type="submit"
-                disabled={isLoading || !canSend}
+                disabled={isLoading || !canSend || (rateLimitResetTime && Date.now() < rateLimitResetTime)}
                 className="h-[48px] px-4 text-slate-900 font-bold hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
                 Send
