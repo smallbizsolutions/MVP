@@ -55,7 +55,7 @@ export async function POST(request) {
 
     const vertexAI = getVertexAI()
     const chatModel = vertexAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash-exp'
+      model: 'gemini-1.5-pro-002'
     });
 
     const lastUserMessage = messages[messages.length - 1].content
