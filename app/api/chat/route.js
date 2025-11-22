@@ -65,9 +65,7 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // FIX: Use the specific frozen version "-001"
-    // This resolves the 404 error because it doesn't rely on an alias.
-    const model = 'gemini-1.5-flash-001' 
+    const model = 'gemini-1.5-flash' 
     
     // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
