@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
+import { chatRateLimiter } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,25 @@ const COUNTY_NAMES = {
 }
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
+
+// Validate environment variables on startup
+function validateEnvironment() {
+  const required = [
+    'GOOGLE_CLOUD_PROJECT_ID',
+    'GOOGLE_CREDENTIALS_JSON',
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
+  ]
+  
+  const missing = required.filter(key => !process.env[key])
+  
+  if (missing.length > 0) {
+    console.error('❌ Missing required environment variables:', missing)
+    return false
+  }
+  
+  return true
+}
 
 function getVertexCredentials() {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
@@ -28,22 +48,77 @@ function getVertexCredentials() {
   return null
 }
 
+// Validate and sanitize API responses
+function validateApiResponse(response) {
+  if (typeof response !== 'string') {
+    throw new Error('Invalid response format')
+  }
+  
+  // Remove any potential script tags or dangerous content
+  let cleaned = response
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+  
+  // Limit response length to prevent memory issues
+  if (cleaned.length > 50000) {
+    cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated for length]'
+  }
+  
+  return cleaned
+}
+
 // Sanitize errors for production
 function sanitizeError(error) {
   console.error('Chat API Error:', error)
   
   if (process.env.NODE_ENV === 'production') {
+    // Don't expose internal error details in production
     return 'An error occurred processing your request. Please try again.'
   }
   return error.message || 'An error occurred'
 }
 
 export async function POST(request) {
+  // Validate environment before processing
+  if (!validateEnvironment()) {
+    return NextResponse.json(
+      { error: 'Service configuration error. Please contact support.' },
+      { status: 500 }
+    )
+  }
+
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
   
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // SERVER-SIDE RATE LIMITING
+  const rateCheck = await chatRateLimiter.checkLimit(session.user.id, 'chat')
+  
+  if (!rateCheck.allowed) {
+    const retryAfter = Math.ceil((rateCheck.resetTime - Date.now()) / 1000)
+    return NextResponse.json(
+      { 
+        error: 'Rate limit exceeded. Please wait before sending another message.',
+        resetTime: rateCheck.resetTime,
+        remainingRequests: 0
+      },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': retryAfter.toString(),
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
+        }
+      }
+    )
+  }
 
   try {
     const { data: profile } = await supabase
@@ -76,11 +151,41 @@ export async function POST(request) {
 
     const { messages, image, county } = await request.json()
     
+    // INPUT VALIDATION
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json({ error: 'Invalid request format' }, { status: 400 })
+    }
+
+    // Validate county parameter
+    if (county && !VALID_COUNTIES.includes(county)) {
+      return NextResponse.json({ error: 'Invalid county parameter' }, { status: 400 })
+    }
+
+    // Validate message content
+    const lastUserMessage = messages[messages.length - 1]?.content || ""
+    if (typeof lastUserMessage !== 'string' || lastUserMessage.length > 5000) {
+      return NextResponse.json({ error: 'Invalid message format or length' }, { status: 400 })
+    }
+
     // Check image limit separately
     if (image && profile.images_used >= limits.images) {
       return NextResponse.json({ 
         error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
       }, { status: 429 })
+    }
+
+    // Validate image format if provided
+    if (image) {
+      if (typeof image !== 'string' || !image.startsWith('data:image/')) {
+        return NextResponse.json({ error: 'Invalid image format' }, { status: 400 })
+      }
+      
+      // Additional check for image size (already validated client-side, but double-check)
+      const base64Length = image.split(',')[1]?.length || 0
+      const sizeInBytes = (base64Length * 3) / 4
+      if (sizeInBytes > 5 * 1024 * 1024) { // 5MB
+        return NextResponse.json({ error: 'Image too large' }, { status: 400 })
+      }
     }
 
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
@@ -99,7 +204,6 @@ export async function POST(request) {
     })
 
     const model = 'gemini-2.5-flash'
-    const lastUserMessage = messages[messages.length - 1].content || ""
     let contextText = ""
     let usedDocs = []
 
@@ -359,12 +463,15 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
 
+    // VALIDATE API RESPONSE
+    const validatedText = validateApiResponse(text)
+
     // Validation check
-    const hasCitations = /\*\*\[.*?,\s*Page/.test(text)
-    const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(text)
+    const hasCitations = /\*\*\[.*?,\s*Page/.test(validatedText)
+    const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
     
-    if (makesFactualClaims && !hasCitations && !text.includes('cannot find') && !text.includes('do not directly address')) {
-      console.warn('⚠️ Response lacks required citations:', text.substring(0, 200))
+    if (makesFactualClaims && !hasCitations && !validatedText.includes('cannot find') && !validatedText.includes('do not directly address')) {
+      console.warn('⚠️ Response lacks required citations:', validatedText.substring(0, 200))
     }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
@@ -374,16 +481,26 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
-    while ((match = citationRegex.exec(text)) !== null) {
+    while ((match = citationRegex.exec(validatedText)) !== null) {
       citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
 
     return NextResponse.json({ 
-      message: text,
+      message: validatedText,
       county: userCounty,
       citations: citations,
       documentsSearched: usedDocs.length,
-      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient'
+      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient',
+      rateLimit: {
+        remaining: rateCheck.remainingRequests,
+        resetTime: rateCheck.resetTime
+      }
+    }, {
+      headers: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': rateCheck.remainingRequests.toString(),
+        'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
+      }
     })
 
   } catch (error) {
