@@ -16,32 +16,47 @@ export async function POST(request) {
   }
 
   try {
-    // Get user's Stripe customer ID
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', session.user.id)
-      .single()
+    const { priceId } = await request.json()
 
-    if (!subscription?.stripe_customer_id) {
-      return NextResponse.json(
-        { error: 'No subscription found' },
-        { status: 404 }
-      )
+    if (!priceId) {
+      return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    // FIXED: Always use Railway URL
+    // Determine plan name from price ID
+    const planName = priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'enterprise' : 'pro'
+
+    // Always use Railway URL
     const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
 
-    // Create Stripe billing portal session
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: subscription.stripe_customer_id,
-      return_url: `${origin}/documents`,
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
+      customer_email: session.user.email,
+      metadata: {
+        userId: session.user.id,
+        plan: planName,
+      },
+      subscription_data: {
+        trial_period_days: 30,
+        metadata: {
+          userId: session.user.id,
+          plan: planName,
+        },
+      },
     })
 
-    return NextResponse.json({ url: portalSession.url })
+    return NextResponse.json({ url: checkoutSession.url })
   } catch (err) {
-    console.error('Stripe portal error:', err)
+    console.error('Stripe checkout error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
