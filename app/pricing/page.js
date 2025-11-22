@@ -52,7 +52,7 @@ export default function Pricing() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken, // ADD CSRF TOKEN
+          'X-CSRF-Token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -76,7 +76,6 @@ export default function Pricing() {
     }
   }
 
-  // THE 5-COLOR GRADIENT (Amber -> Rose -> Indigo -> Sky -> Green)
   const prismGradient = {
     background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
   }
@@ -127,7 +126,7 @@ export default function Pricing() {
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
           
-          {/* Pro Plan - Standard */}
+          {/* Pro Plan - $49/month */}
           <div className="relative bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-slate-400 transition-all duration-300">
             <div className="p-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Pro</h2>
@@ -185,15 +184,13 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Enterprise Plan - 5-COLOR PRISM */}
+          {/* Enterprise Plan - $99/month */}
           <div className="relative rounded-2xl p-[2px] shadow-xl hover:shadow-2xl transition-shadow duration-300" style={prismGradient}>
             
-            {/* Badge using 5-color gradient */}
             <div className="absolute top-0 right-0 text-white text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-bl-xl z-10" style={prismGradient}>
               Most Popular
             </div>
 
-            {/* White Inner Card */}
             <div className="bg-white rounded-xl h-full p-8 relative">
               
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
@@ -241,16 +238,12 @@ export default function Pricing() {
                 </li>
               </ul>
 
-              {/* 5-Color Outline Button */}
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
                 className="group relative w-full rounded-xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {/* The 5-Color Gradient Border Layer */}
                 <div className="absolute inset-0" style={prismGradient}></div>
-                
-                {/* The White Button Face */}
                 <div className="relative m-[2px] bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 rounded-[10px] transition-all flex items-center justify-center">
                   {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
                 </div>
