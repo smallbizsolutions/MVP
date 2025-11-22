@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +13,12 @@ const COUNTY_NAMES = {
 }
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
+
+// Initialize Vertex AI
+const vertexAI = new VertexAI({
+  project: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  location: 'us-central1'
+});
 
 export async function POST(request) {
   const cookieStore = cookies()
@@ -35,9 +41,10 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    // Use Vertex AI instead of Generative Language API
+    const chatModel = vertexAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash'
+    });
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
