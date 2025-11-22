@@ -62,8 +62,8 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // Using 1.5 Flash for fast reasoning capabilities
-    const model = 'gemini-1.5-flash' 
+    // Using 2.5 Flash for compatibility
+    const model = 'gemini-2.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
