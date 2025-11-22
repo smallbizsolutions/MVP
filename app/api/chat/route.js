@@ -22,7 +22,6 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    // 1. Subscription Check
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -38,15 +37,14 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    // FIX: Revert to "gemini-1.5-flash"
-    // This model is guaranteed to work immediately with your current key.
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    // FIX: Use the specific production version "gemini-1.5-flash-001"
+    // This avoids the alias lookup that is causing the 404s.
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
 
-    // 2. Search
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
       try {
         let searchQuery = lastUserMessage
@@ -76,7 +74,6 @@ CONTENT: ${doc.text}`
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
 
-    // 3. Construct Prompt
     const systemPrompt = `You are protocolLM compliance assistant for ${countyName}.
 
 CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
@@ -103,7 +100,6 @@ Always cite from documents using **[Document Name, Page X]** format.`
     const response = await result.response
     const text = response.text()
 
-    // 4. Update Usage
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
