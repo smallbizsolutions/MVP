@@ -17,7 +17,6 @@ const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 // Initialize Vertex AI with credentials from environment variable
 function getVertexAI() {
   try {
-    // Parse the JSON credentials from environment variable
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || '{}')
     
     return new VertexAI({
@@ -54,10 +53,9 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    // Initialize Vertex AI with proper credentials
     const vertexAI = getVertexAI()
     const chatModel = vertexAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash'
+      model: 'gemini-2.0-flash-exp'
     });
 
     const lastUserMessage = messages[messages.length - 1].content
@@ -104,18 +102,42 @@ ${contextText ? `AVAILABLE DOCUMENTS:\n${usedDocs.map(d => `- ${d.source} (Page 
 
 Always cite from documents using **[Document Name, Page X]** format.`
 
-    let promptParts = [systemPrompt]
-    messages.slice(0, -1).forEach(m => promptParts.push(`${m.role}: ${m.content}`))
-    promptParts.push(`user: ${lastUserMessage}`)
+    // Build the correct format for Vertex AI
+    const contents = []
+    
+    // Add conversation history
+    messages.slice(0, -1).forEach(m => {
+      contents.push({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      })
+    })
 
+    // Add current user message with system prompt
+    const userParts = [{ text: `${systemPrompt}\n\nUser question: ${lastUserMessage}` }]
+    
+    // Add image if present
     if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
-      promptParts.push({ inlineData: { data: base64Data, mimeType: mimeType } })
-      promptParts.push(`Analyze this image for potential food safety concerns based on FDA Food Code and Michigan regulations.`)
+      userParts.push({
+        inlineData: {
+          mimeType: mimeType,
+          data: base64Data
+        }
+      })
     }
 
-    const result = await chatModel.generateContent(promptParts)
+    contents.push({
+      role: 'user',
+      parts: userParts
+    })
+
+    // Generate content with proper structure
+    const result = await chatModel.generateContent({
+      contents: contents
+    })
+
     const response = await result.response
     const text = response.text()
 
