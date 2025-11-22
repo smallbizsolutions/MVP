@@ -14,6 +14,18 @@ const COUNTY_NAMES = {
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 
+// Helper to parse the JSON credentials from Railway variable
+function getVertexCredentials() {
+  if (process.env.GOOGLE_CREDENTIALS_JSON) {
+    try {
+      return JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
+    } catch (e) {
+      console.error('Failed to parse GOOGLE_CREDENTIALS_JSON', e)
+    }
+  }
+  return null
+}
+
 export async function POST(request) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -36,39 +48,26 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    // 2. Initialize Vertex AI (with robust JSON parsing)
-    let credentials
-    try {
-      // Handle cases where the JSON might be double-stringified or contain smart quotes
-      const rawJson = process.env.GOOGLE_CREDENTIALS_JSON
-      if (!rawJson) throw new Error("GOOGLE_CREDENTIALS_JSON is missing in Railway variables")
-      
-      // Clean potential smart quotes from iPad copy/paste
-      const cleanJson = rawJson
-        .replace(/[\u201C\u201D]/g, '"') // Replace curly double quotes
-        .replace(/[\u2018\u2019]/g, "'") // Replace curly single quotes
-      
-      credentials = JSON.parse(cleanJson)
-    } catch (e) {
-      console.error("JSON Parsing Error:", e)
-      throw new Error(`Failed to parse Google Credentials. Check Railway Variables format. Error: ${e.message}`)
+    // 2. Initialize Vertex AI
+    const credentials = getVertexCredentials()
+    const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
+    
+    if (!credentials || !project) {
+      throw new Error('Missing Google Cloud Credentials or Project ID')
     }
 
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials.project_id
-    console.log(`Connecting to Vertex AI Project: ${projectId}`) // Debug log
-
     const vertex_ai = new VertexAI({
-      project: projectId,
+      project: project,
       location: 'us-central1',
       googleAuthOptions: {
         credentials
       }
     })
 
-    // Use the Smart Model
-    const model = 'gemini-1.5-pro-002'
-    const generativeModel = vertex_ai.getGenerativeModel({ model: model })
-
+    // FIX: Switched to the latest Stable Flash model
+    // "gemini-1.5-flash-002" is faster, cheaper, and very reliable on Vertex
+    const model = 'gemini-1.5-flash-002' 
+    
     // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
@@ -95,9 +94,10 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
       }
     }
 
-    // 4. Build Vertex Payload
+    // 4. Construct Request Payload for Vertex AI
     const countyName = COUNTY_NAMES[userCounty] || userCounty
-    const systemInstruction = `You are protocolLM compliance assistant for ${countyName}.
+    
+    const systemInstructionText = `You are protocolLM compliance assistant for ${countyName}.
 
 CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
 
@@ -106,40 +106,59 @@ ${contextText || 'No specific documents found (Answer based on general food safe
 
 ALWAYS cite from documents using **[Document Name, Page X]** format.`
 
-    // Construct message history
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
+    const generativeModel = vertex_ai.getGenerativeModel({
+      model: model,
+      systemInstruction: {
+        parts: [{ text: systemInstructionText }]
+      }
+    })
 
-    // Add System Instruction to the User's last message (Vertex Pattern)
-    // OR use systemInstruction if SDK supports it (v1.7.0+ does)
-    // We will wrap the last user message with context to be safe.
-    const lastMsgIndex = contents.length - 1
-    contents[lastMsgIndex].parts[0].text = `${systemInstruction}\n\nUSER QUESTION: ${contents[lastMsgIndex].parts[0].text}`
+    // Build the chat history parts
+    let userMessageParts = []
+    
+    // Add previous history context
+    if (messages.length > 1) {
+      const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
+      userMessageParts.push({ text: `CHAT HISTORY:\n${historyText}\n\n` })
+    }
 
-    // Handle Image
+    // Add the actual question
+    userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
+
+    // Add Image if present
     if (image && image.includes('base64,')) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
-      contents[lastMsgIndex].parts.push({
+      
+      userMessageParts.push({
         inlineData: {
           mimeType: mimeType,
           data: base64Data
         }
       })
+      userMessageParts.push({ text: "Analyze this image for food safety compliance." })
     }
 
-    const result = await generativeModel.generateContent({ contents })
+    // 5. Generate Content
+    const requestPayload = {
+      contents: [
+        {
+          role: 'user',
+          parts: userMessageParts
+        }
+      ]
+    }
+
+    const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
 
-    // 5. Update Usage
+    // 6. Update Usage Stats
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
-    // 6. Extract Citations
+    // 7. Extract Citations
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
@@ -156,7 +175,6 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
 
   } catch (error) {
     console.error('Vertex AI Error:', error)
-    // Ensure we send a JSON response even on error
     return NextResponse.json({ 
       error: error.message || 'Service error occurred.' 
     }, { status: 500 })
