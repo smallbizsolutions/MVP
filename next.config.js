@@ -25,7 +25,7 @@ const nextConfig = {
   swcMinify: true,
   poweredByHeader: false,
   
-  // Ignore build errors from type checking to ensure deployment succeeds
+  // Ignore build errors from type checking
   typescript: {
     ignoreBuildErrors: true,
   },
