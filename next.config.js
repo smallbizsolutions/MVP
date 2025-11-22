@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Commented out for Railway deployment - can re-enable after successful deploy
+  // output: 'standalone',
   
   // Webpack configuration for pdf-parse
   webpack: (config, { isServer }) => {
@@ -10,6 +11,13 @@ const nextConfig = {
     }
     return config;
   },
+  
+  // Ensure Railway can access the app
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['*']
+    }
+  }
 }
 
 export default nextConfig;
