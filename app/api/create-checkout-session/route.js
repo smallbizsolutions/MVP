@@ -23,6 +23,8 @@ export async function POST(request) {
     }
 
     // Determine plan name from price ID
+    // Pro: price_1SVJvcDlSrKA3nbAlLcPCs52
+    // Enterprise: price_1SVJyRDlSrKA3nbAGhdEZzXA
     const planName = priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'enterprise' : 'pro'
 
     // Always use Railway URL
