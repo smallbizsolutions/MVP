@@ -14,11 +14,24 @@ const COUNTY_NAMES = {
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 
-// Initialize Vertex AI
-const vertexAI = new VertexAI({
-  project: process.env.GOOGLE_CLOUD_PROJECT_ID,
-  location: 'us-central1'
-});
+// Initialize Vertex AI with credentials from environment variable
+function getVertexAI() {
+  try {
+    // Parse the JSON credentials from environment variable
+    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || '{}')
+    
+    return new VertexAI({
+      project: process.env.GOOGLE_CLOUD_PROJECT_ID,
+      location: 'us-central1',
+      googleAuthOptions: {
+        credentials: credentials
+      }
+    });
+  } catch (error) {
+    console.error('Failed to initialize Vertex AI:', error)
+    throw new Error('Vertex AI initialization failed. Check GOOGLE_CREDENTIALS_JSON environment variable.')
+  }
+}
 
 export async function POST(request) {
   const cookieStore = cookies()
@@ -41,7 +54,8 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    // Use Vertex AI instead of Generative Language API
+    // Initialize Vertex AI with proper credentials
+    const vertexAI = getVertexAI()
     const chatModel = vertexAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash'
     });
