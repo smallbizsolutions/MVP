@@ -62,6 +62,7 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
+    // Using 1.5 Flash for fast reasoning capabilities
     const model = 'gemini-1.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
@@ -71,8 +72,8 @@ export async function POST(request) {
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
       try {
         let searchQuery = lastUserMessage
-        // Improve search query for images to find relevant sanitation codes
-        if (image) searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
+        // If image exists, broaden search to find general sanitation rules
+        if (image) searchQuery = `food safety violations equipment cleanliness sanitation plumbing physical facilities ${lastUserMessage}`.trim()
 
         const results = await searchDocuments(searchQuery, 20, userCounty)
         
@@ -92,21 +93,29 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    // --- UPDATED STRICT DOCUMENT-ONLY MODE ---
-    // Changed instructions to allow application of general rules to specific scenarios
-    const systemInstructionText = `You are ProtocolLM, a strictly regulated compliance assistant for ${countyName}.
+    // --- NEW: LOGICAL INFERENCE PROMPT ---
+    const systemInstructionText = `You are ProtocolLM, an expert Food Safety Compliance Officer for ${countyName}.
 
-STRICT OPERATING RULES:
-1. ANSWER ONLY using the information provided in the "RETRIEVED CONTEXT" below.
-2. DO NOT use outside knowledge or general food safety principles unless they are explicitly confirmed by the text below.
-3. If the user asks about a specific scenario (e.g., "cracked pipe") that is not mentioned word-for-word, YOU MUST apply the general regulations found in the text (e.g., "Plumbing must be maintained in good repair") to answer the question.
-4. If absolutely NO relevant regulations are found in the context, state: "I cannot find this specific information in the official ${countyName} documents provided."
-5. You must CITE every single regulatory claim using this exact format: **[Document Name, Page X]**
+YOUR AUTHORITY:
+You have access to specific County, State (Michigan), and Federal (FDA/USDA) documents in the "RETRIEVED CONTEXT". 
 
-RETRIEVED CONTEXT (${countyName}):
+CORE OBJECTIVE:
+Answer the user's question using ONLY the provided documents, but apply *logical deduction* to connect general regulations to specific scenarios.
+
+RULES OF ENGAGEMENT:
+1. **No Hallucinations:** Do not invent regulations. If a rule doesn't exist in the text, do not create one.
+2. **Logical Inference (The "Inspector" Rule):** 
+   - Users will ask about specific scenarios (e.g., "cracked pipe", "broken tile", "dirty handle").
+   - The documents might not say "cracked pipe." They might say "Plumbing must be maintained in good repair."
+   - **YOU MUST** bridge this gap. State the general rule found in the document and explain how it applies to the user's specific situation.
+   - *Example:* "While the code does not explicitly mention 'cracked PVC,' Document A, Page 10 states that 'plumbing systems shall be maintained in good repair.' Therefore, a cracked pipe is likely a violation."
+3. **Citation Requirement:** You must support every claim with a citation in this format: **[Document Name, Page X]**.
+4. **Unknowns:** If the context contains absolutely NO principles relevant to the situation (e.g., nothing about plumbing, maintenance, or sanitation), state: "I cannot find specific regulations regarding this in the provided ${countyName} documents."
+
+RETRIEVED CONTEXT:
 ${contextText || 'No matching documents found.'}
 `
-    // --- END STRICT MODE ---
+    // --- END PROMPT ---
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
@@ -134,7 +143,7 @@ ${contextText || 'No matching documents found.'}
           data: base64Data
         }
       })
-      userMessageParts.push({ text: "Analyze this image for food safety compliance using ONLY the provided context." })
+      userMessageParts.push({ text: "Analyze this image. Identify any issues based on the general sanitation, equipment maintenance, and physical facility standards found in the RETRIEVED CONTEXT." })
     }
 
     const requestPayload = {
