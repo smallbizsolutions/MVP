@@ -13,9 +13,7 @@ const nextConfig = {
     };
     return config;
   },
-  
-  // REMOVED: The strict "headers()" section that was blocking your site.
-  
+
   // Ensure Railway can access the app
   experimental: {
     serverActions: {
@@ -27,7 +25,7 @@ const nextConfig = {
   swcMinify: true,
   poweredByHeader: false,
   
-  // Ignore build errors from type checking
+  // Ignore build errors from type checking to ensure deployment succeeds
   typescript: {
     ignoreBuildErrors: true,
   },
