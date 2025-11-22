@@ -64,9 +64,9 @@ export async function POST(request) {
       }
     })
 
-    // FIX: Switched to the latest Stable Flash model
-    // "gemini-1.5-flash-002" is faster, cheaper, and very reliable on Vertex
-    const model = 'gemini-1.5-flash-002' 
+    // FIX: Use the Gold Standard Stable Version
+    // "gemini-1.5-flash-001" is the most widely available production model.
+    const model = 'gemini-1.5-flash-001' 
     
     // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
