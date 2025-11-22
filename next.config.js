@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove output: 'standalone' for Railway
-  
   // Webpack configuration for pdf-parse
   webpack: (config, { isServer }) => {
     if (isServer) {
@@ -28,7 +26,7 @@ const nextConfig = {
   swcMinify: true,
   poweredByHeader: false,
   
-  // Ignore build errors from type checking (optional, but helps Railway deploy faster)
+  // Ignore build errors from type checking
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -37,4 +35,4 @@ const nextConfig = {
   }
 }
 
-module.exports = nextConfig;
+export default nextConfig;
