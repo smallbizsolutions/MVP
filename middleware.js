@@ -7,6 +7,9 @@ export async function middleware(req) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
+  // --- SECURITY HEADERS REMOVED HERE --- 
+  // This ensures nothing blocks your site from loading.
+
   // Get the current session
   const { data: { session }, error } = await supabase.auth.getSession()
 
