@@ -7,12 +7,8 @@ export async function middleware(req) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
-  // Add security headers to all responses
-  res.headers.set('X-Content-Type-Options', 'nosniff')
-  res.headers.set('X-Frame-Options', 'DENY')
-  res.headers.set('X-XSS-Protection', '1; mode=block')
-  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  // REMOVED: Strict security headers that were causing blocks.
+  // If you ever need them back, let Next.js handle them by default.
 
   // Get the current session
   const { data: { session }, error } = await supabase.auth.getSession()
@@ -81,6 +77,9 @@ export async function middleware(req) {
 
 export const config = {
   matcher: [
+    // NOTE: Your current matcher excludes "documents" from running middleware.
+    // If that is intentional (e.g. static files), leave it. 
+    // If you want middleware to protect /documents page, remove "|documents" from below.
     '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-192.png|documents).*)',
   ],
 }
