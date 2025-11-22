@@ -7,6 +7,4 @@ cmds = ['npm ci --legacy-peer-deps || npm install --legacy-peer-deps']
 [phases.build]
 cmds = ['npm run build']
 
-[start]
-# FORCE Railway to use the standalone server directly
-cmd = 'HOSTNAME="0.0.0.0" node .next/standalone/server.js'
+# DELETED: The [start] section. We are letting package.json handle it now.
