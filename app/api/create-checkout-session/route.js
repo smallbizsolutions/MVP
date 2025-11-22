@@ -15,48 +15,33 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { priceId } = await request.json()
-  
-  // Map price IDs to plan names - $49 Pro, $99 Enterprise
-  const planMap = {
-    'price_1SVJvcDlSrKA3nbAlLcPCs52': 'pro',
-    'price_1SVJyRDlSrKA3nbAGhdEZzXA': 'enterprise'
-  }
-
-  const plan = planMap[priceId]
-  
-  if (!plan) {
-    return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 })
-  }
-
-  // FIXED: Always use Railway URL
-  const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
-
   try {
-    const stripeSession = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing`,
-      subscription_data: { 
-        trial_period_days: 30,
-        metadata: {
-          userId: session.user.id,
-          plan: plan
-        }
-      },
-      metadata: { 
-        userId: session.user.id,
-        plan: plan
-      },
-      customer_email: session.user.email,
-      allow_promotion_codes: true
+    // Get user's Stripe customer ID
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('stripe_customer_id')
+      .eq('user_id', session.user.id)
+      .single()
+
+    if (!subscription?.stripe_customer_id) {
+      return NextResponse.json(
+        { error: 'No subscription found' },
+        { status: 404 }
+      )
+    }
+
+    // FIXED: Always use Railway URL
+    const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
+
+    // Create Stripe billing portal session
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: `${origin}/documents`,
     })
 
-    return NextResponse.json({ url: stripeSession.url })
+    return NextResponse.json({ url: portalSession.url })
   } catch (err) {
-    console.error('Stripe error:', err)
+    console.error('Stripe portal error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
