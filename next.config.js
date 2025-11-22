@@ -14,26 +14,24 @@ const nextConfig = {
     return config;
   },
 
-  // Ensure Railway can access the app
   experimental: {
     serverActions: {
       allowedOrigins: ['*']
     }
   },
   
-  // Railway optimization
+  // Optimization
   swcMinify: true,
-  poweredByHeader: false,
   
-  // Ignore build errors from type checking
+  // Disable strict mode temporarily to rule out double-render crashes
+  reactStrictMode: false, 
+
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  // REMOVED: output: 'standalone' (This was the cause of the headache)
 }
 
 export default nextConfig;
