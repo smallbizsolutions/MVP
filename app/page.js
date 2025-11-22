@@ -246,10 +246,11 @@ export default function Home() {
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
+        {/* LEFT SIDE - NOW CENTERED */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden">
           <ParticleBackground />
           
-          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
+          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 absolute top-0 left-0 w-full z-10">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
@@ -261,7 +262,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
+          <div className="flex-1 flex flex-col justify-center px-6 sm:px-8 lg:px-12 py-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               <div 
                 className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out"
@@ -338,8 +339,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
+        {/* RIGHT SIDE - Auth Form - NOW CENTERED */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
             <div className="mb-8 lg:hidden">
