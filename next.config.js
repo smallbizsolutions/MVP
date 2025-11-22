@@ -5,7 +5,6 @@ const nextConfig = {
     if (isServer) {
       config.resolve.alias.canvas = false;
     }
-    // Add this to prevent build issues
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -15,7 +14,7 @@ const nextConfig = {
     return config;
   },
   
-  // Security Headers - CRITICAL FOR PRODUCTION
+  // Security Headers - UPDATED FOR RAILWAY
   async headers() {
     return [
       {
@@ -57,13 +56,14 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.supabase.co https://*.google.com https://*.googleapis.com https://api.stripe.com https://*.anthropic.com",
+              // CRITICAL FIX: Allow Railway domains
+              "connect-src 'self' https://*.supabase.co https://*.google.com https://*.googleapis.com https://api.stripe.com https://*.anthropic.com https://*.railway.app https://*.up.railway.app",
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'",
-              "upgrade-insecure-requests"
+              "frame-ancestors 'none'"
+              // REMOVED: "upgrade-insecure-requests" - causes issues on Railway
             ].join('; ')
           }
         ],
@@ -78,7 +78,7 @@ const nextConfig = {
     }
   },
   
-  // Add these for Railway optimization
+  // Railway optimization
   swcMinify: true,
   poweredByHeader: false,
   
@@ -88,7 +88,10 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
-  }
+  },
+  
+  // CRITICAL: Output standalone for Railway
+  output: 'standalone'
 }
 
 export default nextConfig;
