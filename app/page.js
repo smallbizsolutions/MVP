@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
+// Get CSRF token from cookies
+function getCsrfToken() {
+  if (typeof document === 'undefined') return null
+  const cookies = document.cookie.split(';')
+  const csrfCookie = cookies.find(c => c.trim().startsWith('csrf-token='))
+  return csrfCookie ? csrfCookie.split('=')[1] : null
+}
+
 // --- Particle Background ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
@@ -167,6 +175,14 @@ export default function Home() {
     setLoading(true)
     setMessage(null)
 
+    // SECURITY: Get CSRF token
+    const csrfToken = getCsrfToken()
+    if (!csrfToken) {
+      console.warn('CSRF token not found, refreshing page...')
+      window.location.reload()
+      return
+    }
+
     try {
       if (view === 'signup') {
         const productionUrl = 'https://no-rap-production.up.railway.app'
@@ -202,7 +218,6 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Auth Error:", error)
-      alert(`Error: ${error.message}`)
       setMessage({ type: 'error', text: error.message })
     } finally {
       setLoading(false)
@@ -339,10 +354,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form - UPDATED */}
+        {/* RIGHT SIDE - Auth Form */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 z-20 min-h-screen">
           
-          {/* Expanded max-width to lg to give text more room */}
           <div className="w-full max-w-lg mx-auto">
             
             <div className="mb-8 lg:hidden">
@@ -352,13 +366,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* MODIFIED HEADER SECTION */}
             <div className="mb-8 text-center">
               <h2 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-3 tracking-tight whitespace-nowrap">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
               
-              {/* Added sm:whitespace-nowrap to prevent stacking on larger screens */}
               <p className="text-lg text-slate-600 font-medium w-full mx-auto leading-relaxed sm:whitespace-nowrap">
                 {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
               </p>
@@ -418,7 +430,6 @@ export default function Home() {
                 />
               </div>
               
-              {/* SUBMIT BUTTON */}
               <button 
                 type="submit" 
                 disabled={loading} 
