@@ -58,10 +58,11 @@ export async function POST(request) {
 
     const vertex_ai = new VertexAI({
       project: project,
-      location: 'us-central1', // ✅ BACK TO CENTRAL (Most reliable for new projects)
+      location: 'us-central1', // Kept Central as it is usually required for newer models
       googleAuthOptions: { credentials }
     })
 
+    // ✅ KEEPING YOUR WORKING MODEL
     const model = 'gemini-2.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
@@ -91,14 +92,19 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    const systemInstructionText = `You are protocolLM compliance assistant for ${countyName}.
+    // --- STRICT DOCUMENT-ONLY MODE ---
+    const systemInstructionText = `You are ProtocolLM, a strictly regulated compliance assistant for ${countyName}.
 
-CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
+STRICT OPERATING RULES:
+1. ANSWER ONLY using the information provided in the "RETRIEVED CONTEXT" below.
+2. DO NOT use outside knowledge, general food safety principles, or hallucinate regulations not found in the text.
+3. If the answer is not explicitly found in the provided documents, you MUST state: "I cannot find this specific information in the official ${countyName} documents provided."
+4. You must CITE every single regulatory claim using this exact format: **[Document Name, Page X]**
 
 RETRIEVED CONTEXT (${countyName}):
-${contextText || 'No specific documents found (Answer based on general food safety knowledge).'}
-
-ALWAYS cite from documents using **[Document Name, Page X]** format.`
+${contextText || 'No matching documents found.'}
+`
+    // --- END STRICT MODE ---
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
@@ -126,7 +132,7 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
           data: base64Data
         }
       })
-      userMessageParts.push({ text: "Analyze this image for food safety compliance." })
+      userMessageParts.push({ text: "Analyze this image for food safety compliance using ONLY the provided context." })
     }
 
     const requestPayload = {
