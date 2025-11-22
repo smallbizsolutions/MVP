@@ -671,6 +671,18 @@ export default function DocumentsPage() {
                 }`}
                 style={msg.role === 'user' ? prismGradient : {}}
               >
+                {/* --- ADDED IMAGE RENDERING HERE --- */}
+                {msg.image && (
+                  <div className="mb-3 rounded-lg overflow-hidden">
+                    <img 
+                      src={msg.image} 
+                      alt="Uploaded evidence" 
+                      className="max-w-full h-auto max-h-64 object-cover" 
+                    />
+                  </div>
+                )}
+                {/* ---------------------------------- */}
+
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0" style={prismGradient}>
@@ -707,6 +719,23 @@ export default function DocumentsPage() {
         </div>
 
         <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
+          
+          {/* --- ADDED IMAGE PREVIEW ABOVE INPUT --- */}
+          {image && (
+            <div className="max-w-4xl mx-auto mb-3 px-1">
+              <div className="relative inline-block">
+                <img src={image} alt="Preview" className="h-16 w-auto rounded-lg border border-slate-200 shadow-sm" />
+                <button 
+                  onClick={() => setImage(null)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+          {/* -------------------------------------- */}
+
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
             <div className="flex items-end gap-2 md:gap-3">
               <input
