@@ -37,9 +37,7 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    // FIX: Use the specific production version "gemini-1.5-flash-001"
-    // This avoids the alias lookup that is causing the 404s.
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" })
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
