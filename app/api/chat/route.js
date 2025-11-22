@@ -138,8 +138,18 @@ Always cite from documents using **[Document Name, Page X]** format.`
       contents: contents
     })
 
-    const response = await result.response
-    const text = response.text()
+    // Extract text from Vertex AI response correctly
+    const response = result.response
+    const candidates = response.candidates || []
+    
+    let text = ''
+    if (candidates.length > 0 && candidates[0].content && candidates[0].content.parts) {
+      text = candidates[0].content.parts.map(part => part.text || '').join('')
+    }
+    
+    if (!text) {
+      throw new Error('No response generated from Vertex AI')
+    }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
@@ -166,3 +176,14 @@ Always cite from documents using **[Document Name, Page X]** format.`
     }, { status: 500 })
   }
 }
+```
+
+**Key fix:**
+The response structure from Vertex AI is:
+```
+response.candidates[0].content.parts[0].text
+```
+
+Instead of just:
+```
+response.text()
