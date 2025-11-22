@@ -19,8 +19,10 @@ export async function GET(request) {
     }
 
     if (session) {
+      // Get county from user metadata (set during signup)
       const county = session.user.user_metadata?.county || 'washtenaw'
       
+      // FIX #3: Use upsert to avoid race condition between profile creation and update
       const { error: profileError } = await supabase
         .from('user_profiles')
         .upsert({ 
@@ -38,17 +40,20 @@ export async function GET(request) {
 
       if (profileError) {
         console.error('Profile upsert error:', profileError)
+        // Don't fail the auth flow - profile might exist from trigger
       }
 
+      // Check if user has subscription
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('is_subscribed')
         .eq('id', session.user.id)
         .single()
 
-      // FIXED: Use Railway URL
+      // FIXED: Always use Railway URL in production
       const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
 
+      // Redirect based on subscription status
       if (profile?.is_subscribed) {
         return NextResponse.redirect(`${origin}/documents`)
       } else {
@@ -57,6 +62,7 @@ export async function GET(request) {
     }
   }
 
+  // If no code or session, redirect to home
   const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
   return NextResponse.redirect(`${origin}/`)
 }
